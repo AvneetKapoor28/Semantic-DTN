@@ -1,30 +1,52 @@
 from environment import Environment
 from routing.epidemic import EpidemicRouter
 import pandas as pd
+import numpy as np
 
-NUM_RUNS = 10   # change to 20 later for paper
+NUM_RUNS = 20
+
+TRAFFIC_LEVELS = {
+    "Low": 3/3600,
+    "Medium": 8/3600,
+    "High": 20/3600
+}
 
 
 def run_experiments():
 
-    results = []
+    all_results = []
 
-    for i in range(NUM_RUNS):
-        print(f"\nRunning Simulation {i+1}/{NUM_RUNS}")
+    for level_name, prob in TRAFFIC_LEVELS.items():
 
-        env = Environment()
-        router = EpidemicRouter()
+        print(f"\n=== Traffic Level: {level_name} ===")
 
-        metrics = env.run(router)
-        results.append(metrics)
+        level_results = []
 
-        print(metrics)
+        for i in range(NUM_RUNS):
+            print(f"Run {i+1}/{NUM_RUNS}")
 
-    df = pd.DataFrame(results)
-    print("\n===== Average Results =====")
-    print(df.mean())
+            env = Environment(message_gen_prob=prob)
+            router = EpidemicRouter()
 
-    df.to_csv("epidemic_results.csv", index=False)
+            metrics = env.run(router)
+            level_results.append(metrics)
+
+        df = pd.DataFrame(level_results)
+        avg = df.mean()
+        std = df.std()
+
+        print("\nAverage:")
+        print(avg)
+
+        print("\nStd Dev:")
+        print(std)
+
+        avg_dict = avg.to_dict()
+        avg_dict["Traffic"] = level_name
+        all_results.append(avg_dict)
+
+    final_df = pd.DataFrame(all_results)
+    final_df.to_csv("epidemic_traffic_results.csv", index=False)
 
 
 if __name__ == "__main__":

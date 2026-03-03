@@ -17,11 +17,12 @@ MESSAGE_GEN_PROB = 1/1200  # realistic sparse traffic
 
 
 class Environment:
-    def __init__(self):
+    def __init__(self, message_gen_prob):
         self.area_size = AREA_SIZE
         self.nodes = []
         self.mobility = RandomWaypointMobility(AREA_SIZE)
         self.time = 0
+        self.message_gen_prob = message_gen_prob
 
         self.stats = {
             "generated": 0,
@@ -95,7 +96,7 @@ class Environment:
 
     def generate_messages(self):
         for node in self.nodes:
-            if random.random() < MESSAGE_GEN_PROB:
+            if random.random() < self.message_gen_prob:
                 destination = random.choice(self.nodes)
                 while destination.id == node.id:
                     destination = random.choice(self.nodes)

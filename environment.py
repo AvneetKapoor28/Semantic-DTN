@@ -182,6 +182,7 @@ class Environment:
             self.update_mobility()
 
             contacts = self.get_contacts()
+            self.stats["time"] = self.time
             for n1, n2 in contacts:
                 router.exchange(n1, n2, self.stats)
 

@@ -29,6 +29,8 @@ def run_experiments():
 
             env = Environment(message_gen_prob=prob)
             router = SemanticRouter(env.nodes)
+            # router = SprayAndWaitRouter()
+            # router = EpidemicRouter()
 
             metrics = env.run(router)
             level_results.append(metrics)
@@ -49,6 +51,8 @@ def run_experiments():
 
     final_df = pd.DataFrame(all_results)
     final_df.to_csv("semantic_traffic_results.csv", index=False)
+    # final_df.to_csv("spray_and_wait_traffic_results.csv", index=False)
+    # final_df.to_csv("epidemic_traffic_results.csv", index=False)
 
 
 if __name__ == "__main__":

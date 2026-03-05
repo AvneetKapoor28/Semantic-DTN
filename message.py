@@ -4,6 +4,7 @@ import uuid
 import random
 
 CRITICAL_PERCENT = 0.3
+INITIAL_COPIES = 8
 
 class Message:
     def __init__(self, source, destination, creation_time, msg_id=None):
@@ -13,6 +14,7 @@ class Message:
         self.creation_time = creation_time
         self.critical = random.random() < CRITICAL_PERCENT
         self.hops = 0
+        self.copies = INITIAL_COPIES
 
     def clone(self):
         new_msg = Message(
@@ -23,4 +25,5 @@ class Message:
         )
         new_msg.critical = self.critical
         new_msg.hops = self.hops
+        new_msg.copies = self.copies
         return new_msg

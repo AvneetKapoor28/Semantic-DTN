@@ -1,5 +1,6 @@
 from environment import Environment
 from routing.epidemic import EpidemicRouter
+from routing.spray import SprayAndWaitRouter
 import pandas as pd
 import numpy as np
 
@@ -26,7 +27,7 @@ def run_experiments():
             print(f"Run {i+1}/{NUM_RUNS}")
 
             env = Environment(message_gen_prob=prob)
-            router = EpidemicRouter()
+            router = SprayAndWaitRouter()
 
             metrics = env.run(router)
             level_results.append(metrics)
@@ -46,7 +47,7 @@ def run_experiments():
         all_results.append(avg_dict)
 
     final_df = pd.DataFrame(all_results)
-    final_df.to_csv("epidemic_traffic_results.csv", index=False)
+    final_df.to_csv("spray_and_wait_traffic_results.csv", index=False)
 
 
 if __name__ == "__main__":

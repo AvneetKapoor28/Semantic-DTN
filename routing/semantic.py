@@ -5,7 +5,11 @@ class SemanticRouter:
     MAX_FORWARD = 5   # limit transmissions per contact
     TTL = 3600
 
-    def utility(self, msg, node_receiver, current_time):
+    def __init__(self, nodes):
+        self.nodes = nodes
+
+    def utility(self, msg, node_sender, node_receiver, current_time):
+
         age = current_time - msg.creation_time
         age_score = age / self.TTL
 
@@ -14,15 +18,25 @@ class SemanticRouter:
 
         buffer_ratio = len(node_receiver.buffer) / BUFFER_SIZE
 
+        # Find destination node
+        destination_node = self.nodes[msg.destination]
+
+        current_dist = self.distance(node_sender, destination_node)
+        neighbor_dist = self.distance(node_receiver, destination_node)
+
+        spatial_progress = 0
+        if current_dist > 0:
+            spatial_progress = (current_dist - neighbor_dist) / current_dist
+
         utility = (
-            0.5 * critical_score +
-            0.3 * age_score +
-            0.2 * destination_score -
-            0.4 * buffer_ratio
+            0.4 * critical_score +
+            0.2 * age_score +
+            0.2 * destination_score +
+            0.3 * spatial_progress -
+            0.3 * buffer_ratio
         )
 
         return utility
-
 
     def exchange(self, node_a, node_b, stats):
 
@@ -37,7 +51,7 @@ class SemanticRouter:
 
         for msg in a_msgs:
             if msg.id not in b_ids:
-                score = self.utility(msg, node_b, stats["time"])
+                score = self.utility(msg,node_a, node_b, stats["time"])
                 candidates.append((score, msg))
 
         # sort by utility
@@ -61,7 +75,7 @@ class SemanticRouter:
 
         for msg in b_msgs:
             if msg.id not in a_ids:
-                score = self.utility(msg, node_a, stats["time"])
+                score = self.utility(msg, node_b, node_a, stats["time"])
                 candidates.append((score, msg))
 
         candidates.sort(reverse=True, key=lambda x: x[0])
@@ -76,3 +90,11 @@ class SemanticRouter:
 
             node_a.buffer.append(new_copy)
             stats["transmissions"] += 1
+    
+    # --------------------------------------------------
+    # Distance calculation
+    # --------------------------------------------------
+    def distance(self, node_a, node_b):
+        dx = node_a.x - node_b.x
+        dy = node_a.y - node_b.y
+        return (dx*dx + dy*dy) ** 0.5

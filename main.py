@@ -28,7 +28,7 @@ def run_experiments():
             print(f"Run {i+1}/{NUM_RUNS}")
 
             env = Environment(message_gen_prob=prob)
-            router = SemanticRouter()
+            router = SemanticRouter(env.nodes)
 
             metrics = env.run(router)
             level_results.append(metrics)

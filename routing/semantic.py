@@ -6,18 +6,19 @@ class SemanticRouter:
     TTL = 3600
 
     def utility(self, msg, node_receiver, current_time):
-
         age = current_time - msg.creation_time
         age_score = age / self.TTL
 
         critical_score = 1 if msg.critical else 0
-
         destination_score = 1 if node_receiver.id == msg.destination else 0
+
+        buffer_ratio = len(node_receiver.buffer) / BUFFER_SIZE
 
         utility = (
             0.5 * critical_score +
             0.3 * age_score +
-            0.2 * destination_score
+            0.2 * destination_score -
+            0.4 * buffer_ratio
         )
 
         return utility

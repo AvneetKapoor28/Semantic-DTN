@@ -27,9 +27,12 @@ class Environment:
         self.stats = {
             "generated": 0,
             "delivered": 0,
+            "critical_generated": 0,
+            "critical_delivered": 0,
             "transmissions": 0,
             "delay": [],
             "critical_delay": [],
+            "hop_count": [],
             "drops": 0
         }
 
@@ -103,6 +106,8 @@ class Environment:
 
                 msg = Message(node.id, destination.id, self.time)
 
+                if msg.critical:
+                    self.stats["critical_generated"] += 1
                 if len(node.buffer) < BUFFER_SIZE:
                     node.buffer.append(msg)
                     self.stats["generated"] += 1
@@ -150,7 +155,9 @@ class Environment:
 
                     if msg.critical:
                         self.stats["critical_delay"].append(delay)
+                        self.stats["critical_delivered"] += 1
 
+                    self.stats["hop_count"].append(msg.hops)
                     self.stats["delivered"] += 1
                     self.delivered_ids.add(msg.id)
 
@@ -197,10 +204,15 @@ class Environment:
         generated = self.stats["generated"]
         delivered = self.stats["delivered"]
 
+        critical_generated = self.stats["critical_generated"]
+        critical_delivered = self.stats["critical_delivered"]
+
         return {
             "DeliveryRatio": delivered / generated if generated else 0,
+            "CriticalDeliveryRatio": critical_delivered / critical_generated if critical_generated else 0,
             "AvgDelay": sum(self.stats["delay"]) / len(self.stats["delay"]) if self.stats["delay"] else 0,
             "AvgCriticalDelay": sum(self.stats["critical_delay"]) / len(self.stats["critical_delay"]) if self.stats["critical_delay"] else 0,
+            "AvgHopCount": sum(self.stats["hop_count"]) / len(self.stats["hop_count"]) if self.stats["hop_count"] else 0,
             "OverheadRatio": self.stats["transmissions"] / delivered if delivered else 0,
             "BufferDrops": self.stats["drops"]
         }

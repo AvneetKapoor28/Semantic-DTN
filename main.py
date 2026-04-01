@@ -4,6 +4,7 @@ from routing.spray import SprayAndWaitRouter
 from routing.semantic import SemanticRouter
 import pandas as pd
 import numpy as np
+import argparse
 
 NUM_RUNS = 20
 
@@ -56,4 +57,12 @@ def run_experiments():
 
 
 if __name__ == "__main__":
-    run_experiments()
+    parser = argparse.ArgumentParser(description="DTN Routing Experiment")
+    parser.add_argument("--demo", action="store_true", help="Run a single visual demo instead of batch experiments")
+    args, _ = parser.parse_known_args()
+    
+    if args.demo:
+        import demo
+        demo.run_demo()
+    else:
+        run_experiments()

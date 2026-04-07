@@ -7,6 +7,7 @@ import math
 class RandomWaypointMobility:
     def __init__(self, area_size):
         self.area_size = area_size
+        self.targets = []
 
     def random_position(self):
         return (
@@ -17,11 +18,18 @@ class RandomWaypointMobility:
     def initialize_node(self, node):
         node.x, node.y = self.random_position()
 
+        if node.role in ["shelter", "responder"]:
+            self.targets.append(node)
+
         if node.speed_range == (0, 0):
             node.destination = None
             node.pause_time = 0
         else:
-            node.destination = self.random_position()
+            if node.role == "drone" and self.targets:
+                target = random.choice(self.targets)
+                node.destination = (target.x, target.y)
+            else:
+                node.destination = self.random_position()
             node.speed = random.uniform(*node.speed_range)
             node.pause_time = 0
 
@@ -41,8 +49,12 @@ class RandomWaypointMobility:
 
         # Destination reached
         if dist < node.speed:
-            node.pause_time = random.randint(10, 60)
-            node.destination = self.random_position()
+            node.pause_time = random.randint(20, 80)
+            if node.role == "drone" and self.targets:
+                target = random.choice(self.targets)
+                node.destination = (target.x, target.y)
+            else:
+                node.destination = self.random_position()
             node.speed = random.uniform(*node.speed_range)
         else:
             node.x += (dx / dist) * node.speed

@@ -7,7 +7,7 @@ import os
 st.set_page_config(page_title="DTN Routing Results", layout="wide", page_icon="📡")
 
 st.title("📡 Spatio-Semantic DTN Routing Analysis")
-st.markdown("Interactive performance analysis of Epidemic, Spray & Wait, Semantic, and Spatio-Semantic routing protocols.")
+st.markdown("Interactive performance analysis of **Epidemic**, **Spray & Wait**, **Semantic**, and **Spatio-Semantic** routing protocols across Low / Medium / High traffic.")
 
 # Load Data
 @st.cache_data
@@ -143,7 +143,7 @@ if not df.empty:
     with tab4:
         st.subheader("Scientific Sandbox Simulation Engine")
         st.write("Launch the hardware-accelerated, high-fidelity PyGame simulation directly from this dashboard.")
-        st.write("This simulation locks pseudo-random state to perfectly compare **Epidemic**, **Spray & Wait**, and **Spatio-Semantic** algorithms simultaneously under **High Traffic** workloads.")
+        st.write("This simulation locks pseudo-random state to perfectly compare **Epidemic**, **Spray & Wait**, **Semantic**, and **Spatio-Semantic** algorithms simultaneously in a 4-panel view.")
         
         st.markdown(
             """

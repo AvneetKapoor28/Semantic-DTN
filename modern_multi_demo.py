@@ -6,12 +6,14 @@ from environment import Environment, SIM_DURATION
 from routing.epidemic import EpidemicRouter
 from routing.spray import SprayAndWaitRouter
 from routing.semantic import SemanticRouter
+from routing.spatio_semantic import SpatioSemanticRouter
 
 
 # ---------------- CONFIG ----------------
 
-WIDTH, HEIGHT = 1500, 800
-PANEL_WIDTH = WIDTH // 3
+WIDTH, HEIGHT = 1800, 800
+NUM_PANELS = 4
+PANEL_WIDTH = WIDTH // NUM_PANELS
 FPS = 60
 
 COLORS = {
@@ -23,7 +25,9 @@ COLORS = {
     "drone": (255, 220, 80),
     "text": (200, 220, 255),
     "highlight": (255, 255, 255),
-    "critical": (255, 80, 80)
+    "critical": (255, 80, 80),
+    "separator": (60, 80, 120),
+    "gold": (255, 215, 0),
 }
 
 
@@ -34,10 +38,10 @@ class ModernMultiVisualizer:
     def __init__(self, envs, titles):
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption("Spatio-Semantic DTN Demo")
+        pygame.display.set_caption("Spatio-Semantic DTN — 4-Way Competition")
 
-        self.font = pygame.font.SysFont("Consolas", 16)
-        self.big_font = pygame.font.SysFont("Consolas", 20, bold=True)
+        self.font = pygame.font.SysFont("Consolas", 14)
+        self.big_font = pygame.font.SysFont("Consolas", 17, bold=True)
 
         self.envs = envs
         self.titles = titles
@@ -57,7 +61,7 @@ class ModernMultiVisualizer:
         if has_critical:
             pygame.draw.circle(self.screen, COLORS["critical"], (x, y), 6)
 
-        pygame.draw.circle(self.screen, color, (x, y), 4)
+        pygame.draw.circle(self.screen, color, (x, y), 3)
 
     # ---------- DRAW PANEL ----------
 
@@ -67,19 +71,24 @@ class ModernMultiVisualizer:
         scale = PANEL_WIDTH / env.area_size
 
         # Grid
-        for i in range(0, PANEL_WIDTH, 80):
+        for i in range(0, PANEL_WIDTH, 60):
             pygame.draw.line(self.screen, COLORS["grid"],
                              (panel_x + i, 0), (panel_x + i, HEIGHT))
             pygame.draw.line(self.screen, COLORS["grid"],
                              (panel_x, i), (panel_x + PANEL_WIDTH, i))
+
+        # Separator
+        if panel_index > 0:
+            pygame.draw.line(self.screen, COLORS["separator"],
+                             (panel_x, 0), (panel_x, HEIGHT), 2)
 
         # Nodes
         for node in env.nodes:
             self.draw_node(panel_x, node, scale)
 
         # Title
-        title = self.big_font.render(self.titles[panel_index], True, COLORS["highlight"])
-        self.screen.blit(title, (panel_x + 20, HEIGHT - 180))
+        title = self.big_font.render(self.titles[panel_index], True, COLORS["gold"])
+        self.screen.blit(title, (panel_x + 10, HEIGHT - 170))
 
         # Stats
         stats = env.stats
@@ -107,12 +116,12 @@ class ModernMultiVisualizer:
 
         for i, line in enumerate(lines):
             text = self.font.render(line, True, COLORS["text"])
-            self.screen.blit(text, (panel_x + 20, HEIGHT - 140 + i*20))
+            self.screen.blit(text, (panel_x + 10, HEIGHT - 140 + i * 20))
 
-        # Highlight spatio-semantic advantage
-        if panel_index == 2:
-            tag = self.font.render("★ PRIORITIZES CRITICAL MESSAGES", True, COLORS["critical"])
-            self.screen.blit(tag, (panel_x + 20, HEIGHT - 40))
+        # Highlight Spatio-Semantic
+        if panel_index == 3:
+            tag = self.font.render("★ ENCOUNTER + ZONE + UTILITY ROUTING", True, COLORS["critical"])
+            self.screen.blit(tag, (panel_x + 10, HEIGHT - 30))
 
     # ---------- RENDER ----------
 
@@ -134,9 +143,7 @@ def run_scientific_demo():
     seed = 42
 
     envs = []
-    routers = []
-
-    for i in range(3):
+    for i in range(NUM_PANELS):
         random.seed(seed)
         env = Environment(message_gen_prob=prob)
         envs.append(env)
@@ -144,13 +151,15 @@ def run_scientific_demo():
     routers = [
         EpidemicRouter(),
         SprayAndWaitRouter(),
-        SemanticRouter(envs[2].nodes)
+        SemanticRouter(envs[2].nodes),
+        SpatioSemanticRouter(envs[3].nodes),
     ]
 
     titles = [
-        "1) EPIDEMIC ROUTING",
+        "1) EPIDEMIC",
         "2) SPRAY & WAIT",
-        "3) SPATIO-SEMANTIC ROUTING"
+        "3) SEMANTIC",
+        "4) SPATIO-SEMANTIC",
     ]
 
     viz = ModernMultiVisualizer(envs, titles)
@@ -164,7 +173,7 @@ def run_scientific_demo():
                 pygame.quit()
                 return
 
-        for i in range(3):
+        for i in range(NUM_PANELS):
             random.seed(seed + t)
 
             env = envs[i]

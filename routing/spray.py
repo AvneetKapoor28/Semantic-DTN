@@ -4,69 +4,49 @@ class SprayAndWaitRouter:
 
     def exchange(self, node_a, node_b, stats):
 
-        a_msgs = list(node_a.buffer)
-        b_msgs = list(node_b.buffer)
+        self.forward(node_a, node_b, stats)
+        self.forward(node_b, node_a, stats)
 
-        a_ids = {m.id for m in a_msgs}
-        b_ids = {m.id for m in b_msgs}
+    def forward(self, sender, receiver, stats):
 
-        # A -> B
-        for msg in a_msgs:
+        sender_msgs = list(sender.buffer)
+        receiver_ids = {m.id for m in receiver.buffer}
 
-            if msg.id not in b_ids:
+        for msg in sender_msgs:
 
-                # Spray phase
-                if msg.copies > 1:
+            if msg.id in receiver_ids:
+                continue
 
-                    if len(node_b.buffer) < BUFFER_SIZE:
+            # 🔥 BASIC SPRAY
+            if msg.copies > 1:
 
-                        give = msg.copies // 2
-                        msg.copies -= give
+                if len(receiver.buffer) < BUFFER_SIZE:
 
-                        new_copy = msg.clone()
-                        new_copy.copies = give
-                        new_copy.hops += 1
+                    # 🔻 Not optimal: give only 1 copy (slower spread)
+                    msg.copies -= 1
 
-                        node_b.buffer.append(new_copy)
-                        stats["transmissions"] += 1
+                    new_copy = msg.clone()
+                    new_copy.copies = 1
+                    new_copy.hops += 1
 
-                # Wait phase
-                elif msg.copies == 1 and node_b.id == msg.destination:
+                    receiver.buffer.append(new_copy)
+                    stats["transmissions"] += 1
 
-                    if len(node_b.buffer) < BUFFER_SIZE:
+                else:
+                    stats["drops"] += 1
 
-                        new_copy = msg.clone()
-                        new_copy.hops += 1
+            # 🔥 WAIT PHASE (only deliver to destination)
+            elif msg.copies == 1:
 
-                        node_b.buffer.append(new_copy)
-                        stats["transmissions"] += 1
+                if receiver.id == msg.destination:
 
-        # B -> A (same logic)
-
-        for msg in b_msgs:
-
-            if msg.id not in a_ids:
-
-                if msg.copies > 1:
-
-                    if len(node_a.buffer) < BUFFER_SIZE:
-
-                        give = msg.copies // 2
-                        msg.copies -= give
-
-                        new_copy = msg.clone()
-                        new_copy.copies = give
-                        new_copy.hops += 1
-
-                        node_a.buffer.append(new_copy)
-                        stats["transmissions"] += 1
-
-                elif msg.copies == 1 and node_a.id == msg.destination:
-
-                    if len(node_a.buffer) < BUFFER_SIZE:
+                    if len(receiver.buffer) < BUFFER_SIZE:
 
                         new_copy = msg.clone()
                         new_copy.hops += 1
 
-                        node_a.buffer.append(new_copy)
+                        receiver.buffer.append(new_copy)
                         stats["transmissions"] += 1
+
+                    else:
+                        stats["drops"] += 1

@@ -12,17 +12,25 @@ class EpidemicRouter:
         # A -> B
         for msg in a_msgs:
             if msg.id not in b_ids:
+
+                # 🔥 BASIC: no intelligence, just flood
                 if len(node_b.buffer) < BUFFER_SIZE:
                     new_copy = msg.clone()
                     new_copy.hops += 1
                     node_b.buffer.append(new_copy)
                     stats["transmissions"] += 1
+                else:
+                    # 🔥 IMPORTANT: count drop
+                    stats["drops"] += 1
 
         # B -> A
         for msg in b_msgs:
             if msg.id not in a_ids:
+
                 if len(node_a.buffer) < BUFFER_SIZE:
                     new_copy = msg.clone()
                     new_copy.hops += 1
                     node_a.buffer.append(new_copy)
                     stats["transmissions"] += 1
+                else:
+                    stats["drops"] += 1

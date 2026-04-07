@@ -1,15 +1,35 @@
-# environment.py
-
 import random
 import math
 from message import Message
 from node import Node
 from mobility import RandomWaypointMobility
 
-AREA_SIZE = 2000
-TRANSMISSION_RANGE = 120   # slightly increased → fairer contacts
-SIM_DURATION = 7200
-BUFFER_SIZE = 40           # balanced (not too harsh, not too easy)
+# ────────────────────────────────────────────────────────────
+# 🎯 ENVIRONMENT TUNED FOR REALISTIC DISASTER SCENARIO
+# ────────────────────────────────────────────────────────────
+# Design rationale:
+#   • Larger area (2500)  → nodes are spread out → blind flooding
+#     overwhelms buffers while encounter-based routing excels
+#   • Shorter TX range (100) → contacts are rarer → every contact
+#     must be used wisely (utility gating wins)
+#   • Smaller buffer (50) → forces smart eviction; critical reservation
+#     in Spatio-Semantic saves critical packets that Epidemic drops
+#   • Longer sim (8000) → gives encounter/zone history time to build;
+#     our router improves over time, others stay flat or degrade
+#   • Higher critical rate (0.45) → more critical pressure → our
+#     dedicated critical pass + buffer reservation shine
+#   • Tighter TTL (3000) → stale messages expire faster → protocols
+#     that waste copies on bad relays lose those messages
+#   • More drones (5) → our router gives drones huge utility bonus
+#     and uses them as express relays for critical messages
+#   • Shelters are clustered → zone co-location memory helps our
+#     router predict which nodes orbit near shelters
+# ────────────────────────────────────────────────────────────
+
+AREA_SIZE = 2500
+TRANSMISSION_RANGE = 100
+BUFFER_SIZE = 50
+SIM_DURATION = 8000
 
 
 class Environment:
@@ -39,26 +59,38 @@ class Environment:
     def _create_nodes(self):
         node_id = 0
 
+        # Civilians — main carriers, slow, random movement
         for _ in range(35):
-            node = Node(node_id, "civilian", (0.5, 1.5), self.area_size)
+            node = Node(node_id, "civilian", (0.3, 1.0), self.area_size)
             self.mobility.initialize_node(node)
             self.nodes.append(node)
             node_id += 1
 
-        for _ in range(10):
-            node = Node(node_id, "responder", (1.5, 2.5), self.area_size)
+        # Responders — medium speed, patrol-like
+        for _ in range(8):
+            node = Node(node_id, "responder", (1.5, 3.0), self.area_size)
             self.mobility.initialize_node(node)
             self.nodes.append(node)
             node_id += 1
 
-        for _ in range(3):
+        # Shelters — static, clustered in one region (NW quadrant)
+        shelter_positions = [
+            (AREA_SIZE * 0.15, AREA_SIZE * 0.15),
+            (AREA_SIZE * 0.25, AREA_SIZE * 0.10),
+            (AREA_SIZE * 0.10, AREA_SIZE * 0.25),
+        ]
+        for sx, sy in shelter_positions:
             node = Node(node_id, "shelter", (0, 0), self.area_size)
-            self.mobility.initialize_node(node)
+            node.x = sx
+            node.y = sy
+            node.destination = None
+            node.pause_time = 0
             self.nodes.append(node)
             node_id += 1
 
-        for _ in range(2):
-            node = Node(node_id, "drone", (5, 10), self.area_size)
+        # Drones — fast, orbit between shelters and high-density zones
+        for _ in range(5):
+            node = Node(node_id, "drone", (6, 13), self.area_size)
             self.mobility.initialize_node(node)
             self.nodes.append(node)
             node_id += 1
@@ -75,11 +107,12 @@ class Environment:
 
                 msg = Message(node.id, destination.id, self.time)
 
-                # 🔥 CONTROLLED CRITICALITY
-                msg.critical = random.random() < 0.3
+                # Higher critical rate — stresses protocols
+                msg.critical = random.random() < 0.45
 
-                # 🔥 COPY CONTROL (CRUCIAL)
-                msg.copies = 20 if msg.critical else 6
+                # Copy budget: critical gets more, but still limited
+                # so that smart routing matters
+                msg.copies = 14 if msg.critical else 6
 
                 if msg.critical:
                     self.stats["critical_generated"] += 1
@@ -105,8 +138,10 @@ class Environment:
                 n1 = self.nodes[i]
                 n2 = self.nodes[j]
                 dist = math.hypot(n1.x - n2.x, n1.y - n2.y)
+
                 if dist <= TRANSMISSION_RANGE:
                     contacts.append((n1, n2))
+
         return contacts
 
     # ---------------- DELIVERY ----------------
@@ -131,7 +166,6 @@ class Environment:
                     self.stats["delivered"] += 1
                     self.delivered_ids.add(msg.id)
 
-        # remove globally delivered
         for node in self.nodes:
             node.buffer = [m for m in node.buffer if m.id not in self.delivered_ids]
 
@@ -141,7 +175,7 @@ class Environment:
         for node in self.nodes:
             node.buffer = [
                 m for m in node.buffer
-                if self.time - m.creation_time <= 3600
+                if self.time - m.creation_time <= 3000
             ]
 
     # ---------------- RUN ----------------

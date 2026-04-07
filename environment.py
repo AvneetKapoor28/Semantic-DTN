@@ -79,7 +79,7 @@ class Environment:
                 msg.critical = random.random() < 0.3
 
                 # 🔥 COPY CONTROL (CRUCIAL)
-                msg.copies = 14 if msg.critical else 8
+                msg.copies = 20 if msg.critical else 6
 
                 if msg.critical:
                     self.stats["critical_generated"] += 1
@@ -171,8 +171,14 @@ class Environment:
         generated = self.stats["generated"]
         delivered = self.stats["delivered"]
 
+        critical_gen = self.stats["critical_generated"]
+        critical_del = self.stats["critical_delivered"]
+
         return {
             "DeliveryRatio": delivered / generated if generated else 0,
+            "CriticalDeliveryRatio": critical_del / critical_gen if critical_gen else 0,
+            "AvgDelay": sum(self.stats["delay"]) / len(self.stats["delay"]) if self.stats["delay"] else 0,
+            "AvgCriticalDelay": sum(self.stats["critical_delay"]) / len(self.stats["critical_delay"]) if self.stats["critical_delay"] else 0,
             "OverheadRatio": self.stats["transmissions"] / delivered if delivered else 0,
             "BufferDrops": self.stats["drops"]
         }

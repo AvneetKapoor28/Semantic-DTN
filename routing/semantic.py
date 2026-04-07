@@ -13,15 +13,15 @@ class SemanticRouter:
 
         score = 0
 
-        # Destination → absolute priority
+        # 🔥 DESTINATION (must dominate)
         if receiver.id == msg.destination:
             score += 1000
 
-        # Critical messages
+        # 🔥 CRITICAL (strong but not insane)
         if msg.critical:
-            score += 10
+            score += 20
 
-        # Role awareness
+        # 🔥 ROLE AWARENESS
         if receiver.role == "drone":
             score += 5
         elif receiver.role == "responder":
@@ -43,17 +43,22 @@ class SemanticRouter:
 
         candidates = []
 
-        # Collect all possible messages (NO filtering)
         for msg in sender_msgs:
-            if msg.id not in receiver_ids:
-                score = self.utility(msg, sender, receiver)
-                candidates.append((score, msg))
+            if msg.id in receiver_ids:
+                continue
 
-        # Sort by priority
+            score = self.utility(msg, sender, receiver)
+            candidates.append((score, msg))
+
+        # 🔥 SORT: Critical automatically comes first via utility
         candidates.sort(reverse=True, key=lambda x: x[0])
 
-        # 🔥 KEY: behave like epidemic but ordered
+        forwarded = 0
+
         for score, msg in candidates:
+
+            if forwarded >= 80:   # controlled but strong spreading
+                break
 
             if len(receiver.buffer) >= BUFFER_SIZE:
                 break
@@ -63,3 +68,4 @@ class SemanticRouter:
 
             receiver.buffer.append(new_copy)
             stats["transmissions"] += 1
+            forwarded += 1

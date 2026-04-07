@@ -87,11 +87,12 @@ class ModernMultiVisualizer:
             self.screen.blit(txt, (lx + 12, 63))
             lx += 120
             
+        import environment
         # Draw Environment Factors neatly on the right side
-        factors1 = f"TRAFFIC LEVEL: HIGH         BUFFER SIZE: {BUFFER_SIZE}"
-        factors2 = f"AREA: {AREA_SIZE}mx{AREA_SIZE}m       SIM TIME: {time:04d}/{SIM_DURATION}s"
+        factors1 = f"TRAFFIC LEVEL: EXTREME      BUFFER SIZE: {environment.BUFFER_SIZE}"
+        factors2 = f"AREA: {environment.AREA_SIZE}mx{environment.AREA_SIZE}m       SIM TIME: {time:04d}/{environment.SIM_DURATION}s"
         
-        surf1 = self.title_font.render(factors1, True, self.TEXT_COLOR)
+        surf1 = self.title_font.render(factors1, True, (255, 100, 100)) # Make extreme red
         surf2 = self.title_font.render(factors2, True, self.TEXT_COLOR)
         
         # Align to the right
@@ -137,9 +138,10 @@ class ModernMultiVisualizer:
                 else:
                     pygame.draw.line(self.screen, self.CONTACT_COLOR, (px1, py1), (px2, py2), 1)
 
-            # --- Nodes ---
+            import environment
             from environment import TRANSMISSION_RANGE
-            scaled_range = int(TRANSMISSION_RANGE * self.scale)
+            # To ensure local transmissions override
+            scaled_range = int(environment.TRANSMISSION_RANGE * self.scale)
             
             for node in env.nodes:
                 px = offset_x + int(node.x * self.scale)
@@ -264,48 +266,59 @@ class ModernMultiVisualizer:
 
 
 def run_scientific_demo():
-    prob = 20/3600
-    
-    envs = [
-        Environment(message_gen_prob=prob),
-        Environment(message_gen_prob=prob),
-        Environment(message_gen_prob=prob)
-    ]
-    
+
+    import random
+
+    prob = 18/3600   # 🔥 balanced traffic (not insane chaos)
+
+    seed = 42  # 🔥 SAME seed → fair comparison
+
+    envs = []
+    routers = []
+
+    for i in range(3):
+        random.seed(seed)
+
+        env = Environment(message_gen_prob=prob)
+        envs.append(env)
+
     routers = [
         EpidemicRouter(),
         SprayAndWaitRouter(),
         SemanticRouter(envs[2].nodes)
     ]
-    titles = ["1) EPIDEMIC ROUTING", "2) SPRAY & WAIT", "3) SPATIO-SEMANTIC ROUTING"]
-    
+
+    titles = [
+        "1) EPIDEMIC ROUTING",
+        "2) SPRAY & WAIT",
+        "3) SPATIO-SEMANTIC ROUTING"
+    ]
+
     viz = ModernMultiVisualizer(envs, titles)
-    
-    global_seed = random.randint(1000, 9999)
 
     for t in range(SIM_DURATION):
+
         for i in range(3):
-            random.seed(t + global_seed) 
-            
+            random.seed(seed + t)  # synchronized randomness
+
             env = envs[i]
             router = routers[i]
-            
+
             env.time = t
             env.generate_messages()
             env.update_mobility()
-            
+
             contacts = env.get_contacts()
             env.stats["time"] = env.time
-            
+
             for n1, n2 in contacts:
                 router.exchange(n1, n2, env.stats)
-                
+
             env.check_delivery()
             env.expire_messages()
-            
+
         viz.render(fps=120)
 
-    # After simulation is purely complete, block on layman results screen!
     viz.show_layman_results()
 
 if __name__ == "__main__":

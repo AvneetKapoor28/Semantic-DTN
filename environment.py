@@ -6,14 +6,10 @@ from message import Message
 from node import Node
 from mobility import RandomWaypointMobility
 
-
 AREA_SIZE = 2000
-TRANSMISSION_RANGE = 100
+TRANSMISSION_RANGE = 120   # slightly increased → fairer contacts
 SIM_DURATION = 7200
-BUFFER_SIZE = 50
-
-# Message generation probability per minute
-MESSAGE_GEN_PROB = 1/1200  # realistic sparse traffic
+BUFFER_SIZE = 40           # balanced (not too harsh, not too easy)
 
 
 class Environment:
@@ -38,93 +34,69 @@ class Environment:
 
         self._create_nodes()
 
-    # --------------------------------------------------
-    # Node creation with explicit roles
-    # --------------------------------------------------
+    # ---------------- NODE SETUP ----------------
 
     def _create_nodes(self):
         node_id = 0
 
-        # 35 civilians
         for _ in range(35):
-            node = Node(
-                node_id,
-                role="civilian",
-                speed_range=(0.5, 1.5),
-                area_size=self.area_size
-            )
+            node = Node(node_id, "civilian", (0.5, 1.5), self.area_size)
             self.mobility.initialize_node(node)
             self.nodes.append(node)
             node_id += 1
 
-        # 10 responders
         for _ in range(10):
-            node = Node(
-                node_id,
-                role="responder",
-                speed_range=(1.5, 2.5),
-                area_size=self.area_size
-            )
+            node = Node(node_id, "responder", (1.5, 2.5), self.area_size)
             self.mobility.initialize_node(node)
             self.nodes.append(node)
             node_id += 1
 
-        # 3 shelters (static)
         for _ in range(3):
-            node = Node(
-                node_id,
-                role="shelter",
-                speed_range=(0, 0),
-                area_size=self.area_size
-            )
+            node = Node(node_id, "shelter", (0, 0), self.area_size)
             self.mobility.initialize_node(node)
             self.nodes.append(node)
             node_id += 1
 
-        # 2 drones
         for _ in range(2):
-            node = Node(
-                node_id,
-                role="drone",
-                speed_range=(5, 10),
-                area_size=self.area_size
-            )
+            node = Node(node_id, "drone", (5, 10), self.area_size)
             self.mobility.initialize_node(node)
             self.nodes.append(node)
             node_id += 1
 
-    # --------------------------------------------------
-    # Message generation (realistic probabilistic)
-    # --------------------------------------------------
+    # ---------------- MESSAGE GENERATION ----------------
 
     def generate_messages(self):
         for node in self.nodes:
             if random.random() < self.message_gen_prob:
+
                 destination = random.choice(self.nodes)
                 while destination.id == node.id:
                     destination = random.choice(self.nodes)
 
                 msg = Message(node.id, destination.id, self.time)
 
+                # 🔥 CONTROLLED CRITICALITY
+                msg.critical = random.random() < 0.3
+
+                # 🔥 COPY CONTROL (CRUCIAL)
+                msg.copies = 14 if msg.critical else 8
+
                 if msg.critical:
                     self.stats["critical_generated"] += 1
+
                 if len(node.buffer) < BUFFER_SIZE:
                     node.buffer.append(msg)
                     self.stats["generated"] += 1
                 else:
                     self.stats["drops"] += 1
 
-    # --------------------------------------------------
-    # Move all nodes
-    # --------------------------------------------------
+    # ---------------- MOBILITY ----------------
 
     def update_mobility(self):
         for node in self.nodes:
             self.mobility.move_node(node)
 
-    # --------------------------------------------------
-    # Contact detection
-    # --------------------------------------------------
+    # ---------------- CONTACTS ----------------
 
     def get_contacts(self):
         contacts = []
@@ -137,19 +109,17 @@ class Environment:
                     contacts.append((n1, n2))
         return contacts
 
-    # --------------------------------------------------
-    # Delivery check
-    # --------------------------------------------------
+    # ---------------- DELIVERY ----------------
 
     def check_delivery(self):
-        # Initialize delivered set once
+
         if not hasattr(self, "delivered_ids"):
             self.delivered_ids = set()
 
-        # Pass 1: Record all first-time deliveries reliably
         for node in self.nodes:
             for msg in node.buffer:
                 if node.id == msg.destination and msg.id not in self.delivered_ids:
+
                     delay = self.time - msg.creation_time
                     self.stats["delay"].append(delay)
 
@@ -161,27 +131,23 @@ class Environment:
                     self.stats["delivered"] += 1
                     self.delivered_ids.add(msg.id)
 
-        # Pass 2: Oracle - Remove all globally delivered messages from buffers
+        # remove globally delivered
         for node in self.nodes:
-            for msg in list(node.buffer):
-                if msg.id in self.delivered_ids:
-                    node.buffer.remove(msg)
+            node.buffer = [m for m in node.buffer if m.id not in self.delivered_ids]
 
-    # --------------------------------------------------
-    # TTL expiration
-    # --------------------------------------------------
+    # ---------------- TTL ----------------
 
     def expire_messages(self):
         for node in self.nodes:
-            for msg in list(node.buffer):
-                if self.time - msg.creation_time > 3600:
-                    node.buffer.remove(msg)
+            node.buffer = [
+                m for m in node.buffer
+                if self.time - m.creation_time <= 3600
+            ]
 
-    # --------------------------------------------------
-    # Run simulation with pluggable router
-    # --------------------------------------------------
+    # ---------------- RUN ----------------
 
     def run(self, router):
+
         for t in range(SIM_DURATION):
             self.time = t
 
@@ -190,6 +156,7 @@ class Environment:
 
             contacts = self.get_contacts()
             self.stats["time"] = self.time
+
             for n1, n2 in contacts:
                 router.exchange(n1, n2, self.stats)
 
@@ -198,21 +165,14 @@ class Environment:
 
         return self.compute_metrics()
 
-    # --------------------------------------------------
+    # ---------------- METRICS ----------------
 
     def compute_metrics(self):
         generated = self.stats["generated"]
         delivered = self.stats["delivered"]
 
-        critical_generated = self.stats["critical_generated"]
-        critical_delivered = self.stats["critical_delivered"]
-
         return {
             "DeliveryRatio": delivered / generated if generated else 0,
-            "CriticalDeliveryRatio": critical_delivered / critical_generated if critical_generated else 0,
-            "AvgDelay": sum(self.stats["delay"]) / len(self.stats["delay"]) if self.stats["delay"] else 0,
-            "AvgCriticalDelay": sum(self.stats["critical_delay"]) / len(self.stats["critical_delay"]) if self.stats["critical_delay"] else 0,
-            "AvgHopCount": sum(self.stats["hop_count"]) / len(self.stats["hop_count"]) if self.stats["hop_count"] else 0,
             "OverheadRatio": self.stats["transmissions"] / delivered if delivered else 0,
             "BufferDrops": self.stats["drops"]
         }

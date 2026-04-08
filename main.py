@@ -4,9 +4,7 @@ from routing.spray import SprayAndWaitRouter
 from routing.semantic import SemanticRouter
 from routing.spatio_semantic import SpatioSemanticRouter
 import pandas as pd
-import numpy as np
 import argparse
-import random
 import os
 
 NUM_RUNS = 20
@@ -19,17 +17,14 @@ TRAFFIC_LEVELS = {
 
 
 def run_single_protocol(name, make_router, output_csv):
-    """Run all traffic levels for a single routing protocol."""
     all_results = []
 
     for level_name, prob in TRAFFIC_LEVELS.items():
         print(f"\n=== [{name}] Traffic Level: {level_name} ===")
-
         level_results = []
 
         for i in range(NUM_RUNS):
             print(f"  Run {i+1}/{NUM_RUNS}", end="\r")
-
             env = Environment(message_gen_prob=prob)
             router = make_router(env)
             metrics = env.run(router)
@@ -54,13 +49,12 @@ def run_single_protocol(name, make_router, output_csv):
 
 
 def run_all_experiments():
-    """Run all 4 protocols and save results to plots/ directory."""
     os.makedirs("plots", exist_ok=True)
 
     protocols = [
-        ("Epidemic",        lambda env: EpidemicRouter(),              "plots/epidemic_results.csv"),
-        ("Spray & Wait",    lambda env: SprayAndWaitRouter(),          "plots/spray_results.csv"),
-        ("Semantic",        lambda env: SemanticRouter(env.nodes),     "plots/semantic_results.csv"),
+        ("Epidemic",        lambda env: EpidemicRouter(),                "plots/epidemic_results.csv"),
+        ("Spray & Wait",    lambda env: SprayAndWaitRouter(),            "plots/spray_results.csv"),
+        ("Semantic",        lambda env: SemanticRouter(env.nodes),       "plots/semantic_results.csv"),
         ("Spatio-Semantic", lambda env: SpatioSemanticRouter(env.nodes), "plots/spatio_semantic_results.csv"),
     ]
 
@@ -73,16 +67,12 @@ def run_all_experiments():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="DTN Routing Experiment")
-    parser.add_argument("--demo", action="store_true", help="Run visual demo")
     parser.add_argument("--protocol", type=str, default="all",
                         choices=["epidemic", "spray", "semantic", "spatio", "all"],
                         help="Which protocol to benchmark (default: all)")
     args, _ = parser.parse_known_args()
 
-    if args.demo:
-        import demo
-        demo.run_demo()
-    elif args.protocol == "all":
+    if args.protocol == "all":
         run_all_experiments()
     else:
         mapping = {

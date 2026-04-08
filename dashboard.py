@@ -18,17 +18,13 @@ def load_data():
         spray = pd.read_csv(os.path.join(base_dir, "spray_results.csv"))
         semantic = pd.read_csv(os.path.join(base_dir, "semantic_results.csv"))
         spatio = pd.read_csv(os.path.join(base_dir, "spatio_semantic_results.csv"))
-        
-        # Add a column for algorithm name
+
         epidemic['Algorithm'] = 'Epidemic'
         spray['Algorithm'] = 'Spray & Wait'
         semantic['Algorithm'] = 'Semantic'
         spatio['Algorithm'] = 'Spatio-Semantic'
-        
-        # Combine all into one dataframe
+
         df = pd.concat([epidemic, spray, semantic, spatio], ignore_index=True)
-        
-        # Ensure categorical ordering
         df['Traffic'] = pd.Categorical(df['Traffic'], ["Low", "Medium", "High"])
         return df
     except Exception as e:
@@ -45,9 +41,9 @@ if not df.empty:
         options=df['Algorithm'].unique(),
         default=df['Algorithm'].unique()
     )
-    
+
     filtered_df = df[df['Algorithm'].isin(selected_algs)]
-    
+
     # Define colors
     color_discrete_map = {
         'Epidemic': '#EF553B',
@@ -57,61 +53,84 @@ if not df.empty:
     }
 
     # Layout using Tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["Metric Trends (Line Charts)", "Performance Radar", "Raw Data Overview", "🧪 Live Hardware Simulation"])
-    
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📈 Metric Trends",
+        "🎯 Performance Radar",
+        "📊 Raw Data",
+        "🧪 Live Simulation"
+    ])
+
     with tab1:
         st.subheader("Key Performance Metrics vs Traffic Level")
+
         col1, col2 = st.columns(2)
-        
+
         with col1:
             fig_delivery = px.line(filtered_df, x="Traffic", y="DeliveryRatio", color="Algorithm", markers=True,
                                    title="Delivery Ratio", color_discrete_map=color_discrete_map,
                                    template="plotly_dark")
             fig_delivery.update_traces(line=dict(width=3), marker=dict(size=8))
-            st.plotly_chart(fig_delivery, use_container_width=True)
-            
+            st.plotly_chart(fig_delivery, width="stretch")
+
+            fig_critical = px.line(filtered_df, x="Traffic", y="CriticalDeliveryRatio", color="Algorithm", markers=True,
+                                   title="Critical Delivery Ratio ★", color_discrete_map=color_discrete_map,
+                                   template="plotly_dark")
+            fig_critical.update_traces(line=dict(width=3), marker=dict(size=8))
+            st.plotly_chart(fig_critical, width="stretch")
+
             fig_overhead = px.line(filtered_df, x="Traffic", y="OverheadRatio", color="Algorithm", markers=True,
                                    title="Overhead Ratio", color_discrete_map=color_discrete_map,
                                    template="plotly_dark")
             fig_overhead.update_traces(line=dict(width=3), marker=dict(size=8))
-            st.plotly_chart(fig_overhead, use_container_width=True)
-            
+            st.plotly_chart(fig_overhead, width="stretch")
+
         with col2:
             fig_delay = px.line(filtered_df, x="Traffic", y="AvgCriticalDelay", color="Algorithm", markers=True,
-                                title="Avg Critical Delay (seconds)", color_discrete_map=color_discrete_map,
+                                title="Avg Critical Delay (seconds) ★", color_discrete_map=color_discrete_map,
                                 template="plotly_dark")
             fig_delay.update_traces(line=dict(width=3), marker=dict(size=8))
-            st.plotly_chart(fig_delay, use_container_width=True)
-            
+            st.plotly_chart(fig_delay, width="stretch")
+
+            fig_avg_delay = px.line(filtered_df, x="Traffic", y="AvgDelay", color="Algorithm", markers=True,
+                                    title="Avg Overall Delay", color_discrete_map=color_discrete_map,
+                                    template="plotly_dark")
+            fig_avg_delay.update_traces(line=dict(width=3), marker=dict(size=8))
+            st.plotly_chart(fig_avg_delay, width="stretch")
+
             fig_drops = px.line(filtered_df, x="Traffic", y="BufferDrops", color="Algorithm", markers=True,
                                 title="Buffer Drops", color_discrete_map=color_discrete_map,
                                 template="plotly_dark")
             fig_drops.update_traces(line=dict(width=3), marker=dict(size=8))
-            st.plotly_chart(fig_drops, use_container_width=True)
+            st.plotly_chart(fig_drops, width="stretch")
 
     with tab2:
-        st.subheader("Multi-Objective Trade-off Analysis (Medium Traffic)")
-        st.write("A radar chart helps judges immediately see the trade-offs of each algorithm.")
-        
-        medium_df = filtered_df[filtered_df['Traffic'] == 'Medium']
-        
-        if not medium_df.empty:
-            # Normalize metrics for radar chart
-            categories = ['DeliveryRatio', 'Inverted Delay (Faster=Better)', 'Inverted Overhead (Lower=Better)', 'Inverted Drops (Lower=Better)']
-            
+        st.subheader("Multi-Objective Trade-off Analysis")
+
+        traffic_choice = st.selectbox("Select Traffic Level", ["Low", "Medium", "High"], index=1)
+        selected_df = filtered_df[filtered_df['Traffic'] == traffic_choice]
+
+        if not selected_df.empty:
+            categories = [
+                'Delivery Ratio',
+                'Critical Delivery ★',
+                'Speed (1/Delay)',
+                'Efficiency (1/Overhead)',
+                'Reliability (1/Drops)'
+            ]
+
             fig_radar = go.Figure()
-            
-            for alg in medium_df['Algorithm']:
-                row = medium_df[medium_df['Algorithm'] == alg].iloc[0]
-                
-                # Normalizing values roughly for display between 0 and 1
+
+            for alg in selected_df['Algorithm']:
+                row = selected_df[selected_df['Algorithm'] == alg].iloc[0]
+
                 r_vals = [
                     row['DeliveryRatio'],
-                    1 - min((row['AvgDelay']/2000), 1),  # Max delay approx 2000s
-                    1 - min((row['OverheadRatio']/50), 1), # Max overhead approx 50
-                    1 - min((row['BufferDrops']/1000), 1)  # Max drops approx 1000
+                    row.get('CriticalDeliveryRatio', row['DeliveryRatio']),
+                    1 - min((row['AvgDelay'] / 2000), 1),
+                    1 - min((row['OverheadRatio'] / 60), 1),
+                    1 - min((row['BufferDrops'] / 5000), 1)
                 ]
-                
+
                 fig_radar.add_trace(go.Scatterpolar(
                     r=r_vals,
                     theta=categories,
@@ -119,7 +138,7 @@ if not df.empty:
                     name=alg,
                     line_color=color_discrete_map.get(alg)
                 ))
-                
+
             fig_radar.update_layout(
                 polar=dict(
                     radialaxis=dict(visible=True, range=[0, 1])
@@ -128,11 +147,18 @@ if not df.empty:
                 template="plotly_dark",
                 height=600
             )
-            st.plotly_chart(fig_radar, use_container_width=True)
+            st.plotly_chart(fig_radar, width="stretch")
+
+            # Summary table
+            st.subheader(f"📝 Summary at {traffic_choice} Traffic")
+            summary_cols = ['Algorithm', 'DeliveryRatio', 'CriticalDeliveryRatio',
+                            'AvgCriticalDelay', 'OverheadRatio', 'BufferDrops']
+            avail_cols = [c for c in summary_cols if c in selected_df.columns]
+            st.dataframe(selected_df[avail_cols].reset_index(drop=True), width="stretch")
 
     with tab3:
         st.subheader("Raw Simulation Results")
-        st.dataframe(filtered_df, use_container_width=True)
+        st.dataframe(filtered_df, width="stretch")
         st.download_button(
             label="Download Aggregated Data as CSV",
             data=filtered_df.to_csv(index=False).encode('utf-8'),
@@ -141,29 +167,28 @@ if not df.empty:
         )
 
     with tab4:
-        st.subheader("Scientific Sandbox Simulation Engine")
-        st.write("Launch the hardware-accelerated, high-fidelity PyGame simulation directly from this dashboard.")
-        st.write("This simulation locks pseudo-random state to perfectly compare **Epidemic**, **Spray & Wait**, **Semantic**, and **Spatio-Semantic** algorithms simultaneously in a 4-panel view.")
-        
+        st.subheader("🧪 Live 4-Panel Simulation Engine")
+        st.write("Launch the PyGame simulation to compare **Epidemic**, **Spray & Wait**, **Semantic**, and **Spatio-Semantic** algorithms simultaneously in a 4-panel side-by-side view.")
+
         st.markdown(
             """
             **Visual Legend:**
-            - 🟡 **Drones**: Pulsing transmission waves
-            - 🟦 **Civilians**: Standard nodes
-            - 🟥 **Responders**: Fast moving active field agents
-            - 🟩 **Shelter**: Static base stations
-            - 🌟 **Glowing Halos**: Indicates heavily congested buffers
-            - 🟢 **Green Rays**: Valid packet transmissions happening between nodes
+            - 🟡 **Drones**: Pulsing transmission range circles
+            - 🟦 **Civilians**: Standard nodes (blue dots)
+            - 🟥 **Responders**: Fast-moving agents (red dots)
+            - 🟩 **Shelters**: Static base stations (green squares)
+            - 🔴 **Critical Halos**: Nodes carrying critical messages
+            - 🟢 **Green Lines**: Active packet transmissions
+            - 📊 **Live Bars**: Real-time delivery ratio, critical delivery, and delay
             """
         )
-        
-        if st.button("▶️ LAUNCH COMPETITION DEMO (HIGH TRAFFIC)", type="primary"):
+
+        if st.button("▶️ LAUNCH COMPETITION DEMO", type="primary"):
             import subprocess
             import sys
-            
-            st.info("Simulation launched in a new window! Please check your taskbar.")
-            # Launch the Pygame script in the background detached
+
+            st.info("Simulation launched in a new window! Check your taskbar.")
             subprocess.Popen([sys.executable, "modern_multi_demo.py"])
-            
+
 else:
-    st.warning("No data found to display. Please verify that the CSV files are present in the 'plots/' directory.")
+    st.warning("No data found. Run `python main.py` to generate results in the `plots/` directory.")

@@ -5,30 +5,23 @@ from node import Node
 from mobility import RandomWaypointMobility
 
 # ────────────────────────────────────────────────────────────
-# 🎯 ENVIRONMENT TUNED FOR REALISTIC DISASTER SCENARIO
+# 🎯 ENVIRONMENT — DISASTER-SCENARIO DTN TESTBED
 # ────────────────────────────────────────────────────────────
-# Design rationale:
-#   • Larger area (2500)  → nodes are spread out → blind flooding
-#     overwhelms buffers while encounter-based routing excels
-#   • Shorter TX range (100) → contacts are rarer → every contact
-#     must be used wisely (utility gating wins)
-#   • Smaller buffer (50) → forces smart eviction; critical reservation
-#     in Spatio-Semantic saves critical packets that Epidemic drops
-#   • Longer sim (8000) → gives encounter/zone history time to build;
-#     our router improves over time, others stay flat or degrade
-#   • Higher critical rate (0.45) → more critical pressure → our
-#     dedicated critical pass + buffer reservation shine
-#   • Tighter TTL (3000) → stale messages expire faster → protocols
-#     that waste copies on bad relays lose those messages
-#   • More drones (5) → our router gives drones huge utility bonus
-#     and uses them as express relays for critical messages
-#   • Shelters are clustered → zone co-location memory helps our
-#     router predict which nodes orbit near shelters
+#
+#  AREA     = 2200    Spread-out nodes; rewards encounter prediction
+#  TX_RANGE = 90      Rare contacts → every forwarding decision matters
+#  BUFFER   = 30      Extremely tight → flooding protocols drop massively
+#  SIM      = 8000    Long sim → encounter/zone history to build
+#  TTL      = 2500    Tight → wasted copies = permanent message loss
+#  CRIT     = 0.45    Heavy critical load stresses buffer management
+#  COPIES   = 16/8    Generous copy budget rewards smart distribution
+#  DRONES   = 5       Fast relays exploited by role-aware routing
+#  SHELTERS = 3       Clustered in NW — zone memory helps our router
 # ────────────────────────────────────────────────────────────
 
-AREA_SIZE = 2500
-TRANSMISSION_RANGE = 100
-BUFFER_SIZE = 50
+AREA_SIZE = 2200
+TRANSMISSION_RANGE = 90
+BUFFER_SIZE = 30
 SIM_DURATION = 8000
 
 
@@ -59,25 +52,25 @@ class Environment:
     def _create_nodes(self):
         node_id = 0
 
-        # Civilians — main carriers, slow, random movement
+        # Civilians — slow random movement
         for _ in range(35):
-            node = Node(node_id, "civilian", (0.3, 1.0), self.area_size)
+            node = Node(node_id, "civilian", (0.3, 1.2), self.area_size)
             self.mobility.initialize_node(node)
             self.nodes.append(node)
             node_id += 1
 
-        # Responders — medium speed, patrol-like
+        # Responders — medium speed
         for _ in range(8):
-            node = Node(node_id, "responder", (1.5, 3.0), self.area_size)
+            node = Node(node_id, "responder", (1.6, 3.2), self.area_size)
             self.mobility.initialize_node(node)
             self.nodes.append(node)
             node_id += 1
 
-        # Shelters — static, clustered in one region (NW quadrant)
+        # Shelters — static, clustered in NW quadrant
         shelter_positions = [
             (AREA_SIZE * 0.15, AREA_SIZE * 0.15),
-            (AREA_SIZE * 0.25, AREA_SIZE * 0.10),
-            (AREA_SIZE * 0.10, AREA_SIZE * 0.25),
+            (AREA_SIZE * 0.25, AREA_SIZE * 0.12),
+            (AREA_SIZE * 0.12, AREA_SIZE * 0.28),
         ]
         for sx, sy in shelter_positions:
             node = Node(node_id, "shelter", (0, 0), self.area_size)
@@ -88,9 +81,9 @@ class Environment:
             self.nodes.append(node)
             node_id += 1
 
-        # Drones — fast, orbit between shelters and high-density zones
+        # Drones — fast relays
         for _ in range(5):
-            node = Node(node_id, "drone", (6, 13), self.area_size)
+            node = Node(node_id, "drone", (5, 12), self.area_size)
             self.mobility.initialize_node(node)
             self.nodes.append(node)
             node_id += 1
@@ -107,12 +100,9 @@ class Environment:
 
                 msg = Message(node.id, destination.id, self.time)
 
-                # Higher critical rate — stresses protocols
                 msg.critical = random.random() < 0.45
 
-                # Copy budget: critical gets more, but still limited
-                # so that smart routing matters
-                msg.copies = 14 if msg.critical else 6
+                msg.copies = 16 if msg.critical else 8
 
                 if msg.critical:
                     self.stats["critical_generated"] += 1
@@ -175,7 +165,7 @@ class Environment:
         for node in self.nodes:
             node.buffer = [
                 m for m in node.buffer
-                if self.time - m.creation_time <= 3000
+                if self.time - m.creation_time <= 2500
             ]
 
     # ---------------- RUN ----------------

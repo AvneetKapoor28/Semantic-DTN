@@ -1,7 +1,6 @@
 from environment import Environment
 from routing.epidemic import EpidemicRouter
 from routing.spray import SprayAndWaitRouter
-from routing.semantic import SemanticRouter
 from routing.spatio_semantic import SpatioSemanticRouter
 import pandas as pd
 import argparse
@@ -54,7 +53,6 @@ def run_all_experiments():
     protocols = [
         ("Epidemic",        lambda env: EpidemicRouter(),                "plots/epidemic_results.csv"),
         ("Spray & Wait",    lambda env: SprayAndWaitRouter(),            "plots/spray_results.csv"),
-        ("Semantic",        lambda env: SemanticRouter(env.nodes),       "plots/semantic_results.csv"),
         ("Spatio-Semantic", lambda env: SpatioSemanticRouter(env.nodes), "plots/spatio_semantic_results.csv"),
     ]
 
@@ -68,7 +66,7 @@ def run_all_experiments():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="DTN Routing Experiment")
     parser.add_argument("--protocol", type=str, default="all",
-                        choices=["epidemic", "spray", "semantic", "spatio", "all"],
+                        choices=["epidemic", "spray", "spatio", "all"],
                         help="Which protocol to benchmark (default: all)")
     args, _ = parser.parse_known_args()
 
@@ -78,7 +76,6 @@ if __name__ == "__main__":
         mapping = {
             "epidemic":  ("Epidemic",        lambda env: EpidemicRouter(),                "plots/epidemic_results.csv"),
             "spray":     ("Spray & Wait",    lambda env: SprayAndWaitRouter(),             "plots/spray_results.csv"),
-            "semantic":  ("Semantic",        lambda env: SemanticRouter(env.nodes),        "plots/semantic_results.csv"),
             "spatio":    ("Spatio-Semantic", lambda env: SpatioSemanticRouter(env.nodes),  "plots/spatio_semantic_results.csv"),
         }
         name, factory, csv_path = mapping[args.protocol]

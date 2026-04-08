@@ -1,8 +1,7 @@
 """
-4-Panel DTN Competition Visualization
-======================================
-Side-by-side comparison of Epidemic, Spray & Wait,
-Semantic, and Spatio-Semantic routing protocols.
+3-Panel DTN Competition — Fullscreen
+=====================================
+Side-by-side: Epidemic vs Spray & Wait vs Spatio-Semantic
 """
 
 import pygame
@@ -13,19 +12,7 @@ import sys
 from environment import Environment, SIM_DURATION, TRANSMISSION_RANGE, AREA_SIZE
 from routing.epidemic import EpidemicRouter
 from routing.spray import SprayAndWaitRouter
-from routing.semantic import SemanticRouter
 from routing.spatio_semantic import SpatioSemanticRouter
-
-
-# ═══════════════ LAYOUT ═══════════════
-
-NUM_PANELS = 4
-PANEL_W = 340
-SIM_H = 340                          # simulation area per panel
-STATS_H = 200                        # stats area per panel
-WIDTH = PANEL_W * NUM_PANELS          # 1360
-HEIGHT = SIM_H + STATS_H             # 540
-FPS = 60
 
 
 # ═══════════════ PALETTE ═══════════════
@@ -54,38 +41,48 @@ class C:
     ACCENT = [
         (245, 75, 75),     # Epidemic — red
         (75, 200, 150),    # Spray — teal
-        (150, 95, 245),    # Semantic — purple
         (55, 170, 245),    # Spatio — blue
     ]
 
 
 # ═══════════════ VISUALIZER ═══════════════
 
+NUM_PANELS = 3
+
 class Visualizer:
 
     def __init__(self, envs, titles):
         pygame.init()
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption("DTN Routing — 4-Way Competition")
+
+        # Fullscreen
+        info = pygame.display.Info()
+        self.width = info.current_w
+        self.height = info.current_h
+        self.screen = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
+        pygame.display.set_caption("DTN Routing — 3-Way Competition")
         self.clock = pygame.time.Clock()
 
-        self.font_sm  = pygame.font.SysFont("Menlo", 10)
-        self.font_md  = pygame.font.SysFont("Menlo", 12)
-        self.font_lg  = pygame.font.SysFont("Menlo", 14, bold=True)
-        self.font_hdr = pygame.font.SysFont("Menlo", 9)
+        self.panel_w = self.width // NUM_PANELS
+        self.stats_h = 220
+        self.sim_h = self.height - self.stats_h
+
+        self.font_sm  = pygame.font.SysFont("Menlo", 13)
+        self.font_md  = pygame.font.SysFont("Menlo", 15)
+        self.font_lg  = pygame.font.SysFont("Menlo", 20, bold=True)
+        self.font_hdr = pygame.font.SysFont("Menlo", 11)
 
         self.envs = envs
         self.titles = titles
-        self.scale = PANEL_W / AREA_SIZE
+        self.scale = self.panel_w / AREA_SIZE
 
     def _bar(self, x, y, w, h, val, mx, color, label, fmt):
-        pygame.draw.rect(self.screen, C.BAR_BG, (x, y, w, h), border_radius=2)
+        pygame.draw.rect(self.screen, C.BAR_BG, (x, y, w, h), border_radius=3)
         fw = max(0, min(int(w * val / mx), w))
         if fw > 0:
-            pygame.draw.rect(self.screen, color, (x, y, fw, h), border_radius=2)
-        pygame.draw.rect(self.screen, color, (x, y, w, h), 1, border_radius=2)
-        self.screen.blit(self.font_hdr.render(label, True, C.DIM), (x, y - 12))
-        self.screen.blit(self.font_md.render(fmt.format(val), True, C.BRIGHT), (x + w + 4, y - 1))
+            pygame.draw.rect(self.screen, color, (x, y, fw, h), border_radius=3)
+        pygame.draw.rect(self.screen, color, (x, y, w, h), 1, border_radius=3)
+        self.screen.blit(self.font_hdr.render(label, True, C.DIM), (x, y - 15))
+        self.screen.blit(self.font_md.render(fmt.format(val), True, C.BRIGHT), (x + w + 8, y - 2))
 
     def render(self, t):
         for event in pygame.event.get():
@@ -95,32 +92,32 @@ class Visualizer:
         self.screen.fill(C.BG)
 
         # Progress bar
-        prog = int(WIDTH * t / SIM_DURATION)
-        pygame.draw.rect(self.screen, (30, 42, 65), (0, 0, WIDTH, 2))
-        pygame.draw.rect(self.screen, C.GOLD, (0, 0, prog, 2))
+        prog = int(self.width * t / SIM_DURATION)
+        pygame.draw.rect(self.screen, (30, 42, 65), (0, 0, self.width, 3))
+        pygame.draw.rect(self.screen, C.GOLD, (0, 0, prog, 3))
 
         for idx, env in enumerate(self.envs):
-            px = idx * PANEL_W
+            px = idx * self.panel_w
             accent = C.ACCENT[idx]
 
             # Vertical separator
             if idx > 0:
-                pygame.draw.line(self.screen, C.SEP, (px, 0), (px, HEIGHT), 1)
+                pygame.draw.line(self.screen, C.SEP, (px, 0), (px, self.height), 1)
 
             # Grid
-            step = int(AREA_SIZE / 6 * self.scale)
-            for i in range(1, 6):
+            step = int(AREA_SIZE / 8 * self.scale)
+            for i in range(1, 8):
                 gx = px + i * step
-                pygame.draw.line(self.screen, C.GRID, (gx, 3), (gx, SIM_H))
+                pygame.draw.line(self.screen, C.GRID, (gx, 4), (gx, self.sim_h))
                 gy = i * step
-                if gy < SIM_H:
-                    pygame.draw.line(self.screen, C.GRID, (px, gy), (px + PANEL_W, gy))
+                if gy < self.sim_h:
+                    pygame.draw.line(self.screen, C.GRID, (px, gy), (px + self.panel_w, gy))
 
             # Contacts
             for n1, n2 in env.get_contacts():
                 x1, y1 = px + int(n1.x * self.scale), int(n1.y * self.scale)
                 x2, y2 = px + int(n2.x * self.scale), int(n2.y * self.scale)
-                if y1 < SIM_H and y2 < SIM_H:
+                if y1 < self.sim_h and y2 < self.sim_h:
                     c = C.TX if (n1.buffer or n2.buffer) else C.CONTACT
                     pygame.draw.line(self.screen, c, (x1, y1), (x2, y2), 1)
 
@@ -128,40 +125,41 @@ class Visualizer:
             sr = int(TRANSMISSION_RANGE * self.scale)
             for node in env.nodes:
                 nx, ny = px + int(node.x * self.scale), int(node.y * self.scale)
-                if ny >= SIM_H:
+                if ny >= self.sim_h:
                     continue
                 col = C.ROLE.get(node.role, (180, 180, 180))
 
                 if node.role == "drone":
-                    pulse = sr + int(math.sin(t * 0.08) * 2)
+                    pulse = sr + int(math.sin(t * 0.08) * 3)
                     s = pygame.Surface((pulse*2, pulse*2), pygame.SRCALPHA)
-                    pygame.draw.circle(s, (*C.DRONE_RNG, 20), (pulse, pulse), pulse, 1)
+                    pygame.draw.circle(s, (*C.DRONE_RNG, 22), (pulse, pulse), pulse, 1)
                     self.screen.blit(s, (nx - pulse, ny - pulse))
-                    pygame.draw.polygon(self.screen, col, [(nx, ny-5), (nx-4, ny+4), (nx+4, ny+4)])
+                    pygame.draw.polygon(self.screen, col, [(nx, ny-7), (nx-5, ny+5), (nx+5, ny+5)])
                 elif node.role == "shelter":
-                    pygame.draw.rect(self.screen, col, (nx-4, ny-4, 8, 8))
+                    pygame.draw.rect(self.screen, col, (nx-5, ny-5, 10, 10))
+                    pygame.draw.rect(self.screen, (150, 255, 180), (nx-5, ny-5, 10, 10), 1)
                 elif node.role == "responder":
-                    pygame.draw.circle(self.screen, col, (nx, ny), 3)
+                    pygame.draw.circle(self.screen, col, (nx, ny), 4)
                 else:
-                    pygame.draw.circle(self.screen, col, (nx, ny), 2)
+                    pygame.draw.circle(self.screen, col, (nx, ny), 3)
 
                 # Critical halo
                 if any(m.critical for m in node.buffer):
-                    s2 = pygame.Surface((12, 12), pygame.SRCALPHA)
-                    pygame.draw.circle(s2, (255, 45, 45, 45), (6, 6), 6)
-                    self.screen.blit(s2, (nx - 6, ny - 6))
+                    s2 = pygame.Surface((16, 16), pygame.SRCALPHA)
+                    pygame.draw.circle(s2, (255, 45, 45, 50), (8, 8), 8)
+                    self.screen.blit(s2, (nx - 8, ny - 8))
 
                 # Buffer load ring
                 if len(node.buffer) > 5:
                     ld = min(len(node.buffer) / 30, 1)
-                    pygame.draw.circle(self.screen, (int(80+170*ld), int(195-145*ld), 75), (nx, ny), int(4+ld*3), 1)
+                    pygame.draw.circle(self.screen, (int(80+170*ld), int(195-145*ld), 75), (nx, ny), int(5+ld*4), 1)
 
             # ──── STATS AREA ────
-            sy = SIM_H + 2
-            pygame.draw.line(self.screen, C.SEP, (px, SIM_H), (px + PANEL_W, SIM_H), 1)
-            pygame.draw.rect(self.screen, accent, (px, sy, PANEL_W, 2))
+            sy = self.sim_h + 2
+            pygame.draw.line(self.screen, C.SEP, (px, self.sim_h), (px + self.panel_w, self.sim_h), 2)
+            pygame.draw.rect(self.screen, accent, (px, sy, self.panel_w, 3))
 
-            self.screen.blit(self.font_lg.render(self.titles[idx], True, accent), (px + 8, sy + 6))
+            self.screen.blit(self.font_lg.render(self.titles[idx], True, accent), (px + 14, sy + 10))
 
             s = env.stats
             gen = max(s["generated"], 1)
@@ -171,29 +169,37 @@ class Visualizer:
             oh  = s["transmissions"] / max(s["delivered"], 1)
             cd  = sum(s["critical_delay"]) / max(len(s["critical_delay"]), 1)
 
-            bx, bw, bh = px + 10, PANEL_W - 70, 11
+            bx = px + 14
+            bw = self.panel_w - 100
+            bh = 14
 
-            y = sy + 28
-            self._bar(bx, y, bw, bh, dr, 100, C.GREEN, "DELIVERY", "{:.1f}%")
-            y += 28
-            self._bar(bx, y, bw, bh, cdr, 100, C.RED, "CRITICAL", "{:.1f}%")
-            y += 28
+            y = sy + 40
+            self._bar(bx, y, bw, bh, dr, 100, C.GREEN, "DELIVERY RATIO", "{:.1f}%")
+            y += 34
+            self._bar(bx, y, bw, bh, cdr, 100, C.RED, "CRITICAL DELIVERY", "{:.1f}%")
+            y += 34
             dn = min(cd / 2000, 1)
-            self._bar(bx, y, bw, bh, cd, 2000, (int(50+200*dn), int(195-145*dn), int(115-75*dn)), "CRIT DELAY", "{:.0f}s")
+            dc = (int(50+200*dn), int(195-145*dn), int(115-75*dn))
+            self._bar(bx, y, bw, bh, cd, 2000, dc, "CRITICAL DELAY", "{:.0f}s")
 
-            y += 24
-            for line in [f"Overhead: {oh:.1f}x", f"Drops: {s['drops']:,}", f"t={t}/{SIM_DURATION}"]:
+            y += 30
+            for line in [f"Overhead: {oh:.1f}x", f"Drops: {s['drops']:,}", f"Time: {t} / {SIM_DURATION}"]:
                 self.screen.blit(self.font_sm.render(line, True, C.DIM), (bx, y))
-                y += 13
+                y += 18
 
-            if idx == 3 and t > 300:
-                self.screen.blit(self.font_sm.render("★ ENCOUNTER+ZONE+UTILITY", True, C.GOLD), (px + 8, HEIGHT - 16))
+            if idx == 2 and t > 300:
+                self.screen.blit(
+                    self.font_sm.render("★ ENCOUNTER + ZONE + UTILITY ROUTING", True, C.GOLD),
+                    (px + 14, self.height - 22)
+                )
 
         pygame.display.flip()
         self.clock.tick(FPS)
 
 
 # ═══════════════ MAIN ═══════════════
+
+FPS = 60
 
 def run():
     prob = 10 / 3600
@@ -207,10 +213,9 @@ def run():
     routers = [
         EpidemicRouter(),
         SprayAndWaitRouter(),
-        SemanticRouter(envs[2].nodes),
-        SpatioSemanticRouter(envs[3].nodes),
+        SpatioSemanticRouter(envs[2].nodes),
     ]
-    titles = ["EPIDEMIC", "SPRAY & WAIT", "SEMANTIC", "SPATIO-SEMANTIC"]
+    titles = ["EPIDEMIC", "SPRAY & WAIT", "SPATIO-SEMANTIC"]
 
     viz = Visualizer(envs, titles)
 
@@ -230,7 +235,6 @@ def run():
 
         viz.render(t)
 
-    # Print final results
     print("\n── FINAL ──")
     for i, env in enumerate(envs):
         m = env.compute_metrics()
@@ -238,7 +242,6 @@ def run():
         for k, v in m.items():
             print(f"  {k}: {v:.4f}" if isinstance(v, float) else f"  {k}: {v}")
 
-    # Hold until close
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):

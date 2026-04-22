@@ -1,0 +1,53 @@
+\begin{center}
+	{\Large \textbf{Appendix A}}-\vspace*{0.5 cm}
+	{\Large \textbf{Key Source Code}}
+	
+\end{center}
+
+The complete source code is available in the project directory. The most important implementation file for the proposed work is \verb|routing/spatio_semantic.py|. The following listing summarizes the core utility calculation used by the Spatio-Semantic router.
+
+\begin{lstlisting}[language=Python]
+def _utility(carrier, dest_node, nodes_dict):
+    _ensure_tables(carrier)
+
+    d = distance(carrier, dest_node)
+    max_dist = math.hypot(AREA_SIZE, AREA_SIZE)
+    prox = 1.0 - (d / max_dist)
+
+    enc_direct = carrier._enc.get(dest_node.id, 0)
+    enc_score = min(enc_direct / 8.0, 1.0)
+
+    dest_zone = zone_of(dest_node)
+    zone_visits = carrier._zone_freq.get(dest_zone, 0)
+    zone_score = min(zone_visits / 12.0, 1.0)
+
+    role_bonus = 0.0
+    if carrier.role == "drone":
+        role_bonus = 0.40
+    elif carrier.role == "responder":
+        role_bonus = 0.20
+    elif carrier.role == "shelter":
+        role_bonus = 0.10
+
+    trans_score = 0.0
+    top_peers = sorted(
+        carrier._enc.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )[:6]
+    for peer_id, peer_enc in top_peers:
+        peer_node = nodes_dict.get(peer_id)
+        if peer_node is not None:
+            _ensure_tables(peer_node)
+            indirect = peer_node._enc.get(dest_node.id, 0)
+            trans_score += min(peer_enc * indirect, 5.0)
+    trans_score = min(trans_score / 20.0, 1.0)
+
+    return (
+        0.18 * prox +
+        0.28 * enc_score +
+        0.20 * zone_score +
+        0.14 * role_bonus +
+        0.20 * trans_score
+    )
+\end{lstlisting}

@@ -1,0 +1,73 @@
+\chapter{\MakeUppercase{System Design}}
+
+\section{System Architecture}
+The simulator is organized into independent modules. The environment controls time, node creation, message generation, mobility updates, contact discovery, delivery checking, expiration, and metric computation. The routing package contains protocol-specific forwarding logic. This structure allows the same environment to execute different routers without changing the test conditions.
+
+\begin{figure}[h!]
+    \centering
+    \fbox{\parbox{0.88\textwidth}{\centering
+    Image placeholder: add a screenshot or diagram showing the simulator architecture with Environment, Mobility, Node, Message, Routing Protocols, Metrics, CSV Output, and Dashboard.}}
+    \caption{System architecture of the DTN routing simulator}
+    \label{fig:architecture_placeholder}
+\end{figure}
+
+\section{Detailed Design}
+The main execution loop performs the following sequence for each time step:
+
+\begin{enumerate}
+	\item Generate new messages according to the traffic level.
+	\item Update the mobility state of every node.
+	\item Detect all node pairs within transmission range.
+	\item Invoke the selected router for each contact.
+	\item Check whether any message has reached its destination.
+	\item Expire messages whose \ac{ttl} has been exceeded.
+\end{enumerate}
+
+This design keeps routing decisions local to contacts. A router does not receive global future knowledge; it can only use the state maintained by the nodes and the information available during encounters.
+
+\section{Proposed Spatio-Semantic Routing Design}
+The Spatio-Semantic router computes a utility score for each possible carrier-destination pair. The score combines spatial proximity, direct encounter history, zone co-location, semantic role, and transitive encounter evidence. The composite utility is:
+
+\begin{equation}
+	U = 0.18P + 0.28E + 0.20Z + 0.14R + 0.20T
+\end{equation}
+
+where \ac{proximity} is normalized spatial proximity, \ac{encounter} is normalized direct encounter frequency, \ac{zone} is normalized visit frequency to the destination zone, \ac{role} is the semantic role bonus, and \ac{transitive} is the two-hop encounter-chain score.
+
+\subsection{Spatial Awareness}
+The simulator area is divided into a 5 by 5 grid of zones. Each node records how frequently it visits each zone, with gradual decay over time. A carrier that often visits the destination's zone is considered more useful than a carrier that only happens to be close at the current instant. This is important in \acp{dtn}, where future movement can be more valuable than present distance.
+
+\subsection{Semantic Awareness}
+The protocol assigns role bonuses to operationally useful nodes. Drones receive the highest role bonus because they move quickly and can bridge separated regions. Responders receive a smaller bonus because they have higher mobility and operational relevance. Shelters receive a limited bonus because they are meaningful fixed points, especially for messages headed nearby. Civilians receive no additional bonus.
+
+\subsection{Encounter and Transitive Awareness}
+Direct encounter history records how often two nodes meet. This captures repeated contacts and stable mobility patterns. Transitive awareness looks at the carrier's strongest peers and checks whether those peers have encountered the destination. This concept is related to history-and-transitivity routing in \ac{prophet}, but here it is one component of a broader spatial and semantic utility function \citep{lindgren2012prophet}.
+
+\section{Forwarding Policy}
+The forwarding policy changes according to message priority and copy count. Critical messages are processed before non-critical messages. When many copies remain, the router behaves more aggressively and distributes multiple copies. When fewer copies remain, the router becomes more selective and forwards only when the receiver has better utility. When only one copy remains, handoff is allowed only to a clearly better carrier, with a more permissive rule for drones carrying critical messages.
+
+\begin{algorithm}[h!]
+\caption{Spatio-Semantic forwarding decision}
+\begin{algorithmic}[1]
+\ForAll{messages in sender buffer, ordered as critical first}
+	\If{receiver already has the message or no copies remain}
+		\State skip the message
+	\EndIf
+	\If{receiver is the destination}
+		\State deliver one copy directly
+	\ElsIf{message is critical and copies are above spray threshold}
+		\State give a larger share of copies, especially to drones
+	\ElsIf{copies are greater than one}
+		\State compare receiver utility with sender utility
+		\If{utility gain is sufficient}
+			\State transfer a proportional number of copies
+		\EndIf
+	\ElsIf{one copy remains}
+		\State hand off only to a clearly better carrier
+	\EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\section{Buffer Management}
+The proposed router reserves 35 percent of each buffer for critical messages. Non-critical messages can use only the remaining buffer capacity. If a critical message arrives when the node is full, the router attempts to evict a non-critical message, prioritizing messages with redundant remaining copies. This design directly supports the thesis goal: emergency messages should survive congestion better than routine messages.

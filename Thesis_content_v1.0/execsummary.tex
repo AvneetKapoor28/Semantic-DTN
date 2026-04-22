@@ -1,0 +1,10 @@
+\begin{center}
+	\Large{\textbf{EXECUTIVE SUMMARY}}	
+\end{center}
+\vspace{1em}
+\normalsize
+\hspace{1cm} This thesis presents a spatio-semantic routing protocol for delay and disruption tolerant networks in disaster-response environments. In such networks, stable end-to-end paths are often unavailable because nodes move independently, infrastructure may be damaged, and contacts occur only when two devices come within wireless range. Conventional flooding-based routing improves delivery by copying messages widely, but it overloads buffers and radio transmissions. Copy-limited routing reduces resource use, but it can delay urgent traffic when the selected relay does not move toward useful contacts.
+
+The proposed protocol combines spatial awareness, semantic role awareness, encounter history, zone visit frequency, transitive delivery prediction, hybrid spray-and-utility forwarding, and a critical-message buffer reserve. The protocol is evaluated against Epidemic routing and Spray and Wait routing in a Python-based simulator containing civilians, responders, shelters, and drones. Experiments are repeated across low, medium, and high traffic levels, and the evaluation focuses on delivery ratio, critical delivery ratio, critical delay, overhead ratio, and buffer drops.
+
+The results show that the proposed protocol is most valuable under stress. Under high traffic, Spatio-Semantic routing achieves a delivery ratio of 0.734 compared with 0.366 for Epidemic routing and 0.682 for Spray and Wait. It also improves critical delivery ratio by 166.2 percent over Epidemic routing and reduces average critical delay by 38.5 percent over Epidemic routing and 18.4 percent over Spray and Wait. The main trade-off is that the protocol uses higher overhead than Spray and Wait, but this cost is purposeful: additional transmissions are directed toward semantically and spatially useful carriers rather than blind replication. The thesis concludes that disaster DTNs benefit from routing decisions that understand where nodes move, what roles they serve, and which messages require priority treatment.

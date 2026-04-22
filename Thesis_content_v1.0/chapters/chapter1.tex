@@ -1,0 +1,31 @@
+\chapter{\MakeUppercase{Introduction}}
+\justifying
+\section{Background}
+\acp{dtn} are networks in which a continuous path between source and destination cannot be assumed. Nodes store messages, carry them while moving, and forward them opportunistically when contacts occur. This store-carry-forward model is useful in disaster-response scenarios because damaged infrastructure, sparse deployment, intermittent wireless links, and node mobility make conventional Internet-style routing impractical \citep{cerf2007dtn}. In such environments, communication support must continue even when connectivity is fragmented.
+
+The project studies routing for a disaster-response \ac{dtn} consisting of civilians, responders, shelters, and drones. Each role has different mobility and operational meaning. Civilians move slowly and may carry local reports. Responders move faster and are expected to participate in rescue operations. Shelters are static destinations or coordination points. Drones are fast mobile relays that can bridge separated areas. A routing protocol that treats all of these nodes identically ignores information that is already available in the scenario.
+
+The protocol proposed in this thesis is called Spatio-Semantic routing. The term spatial refers to location, zone visitation, and physical proximity to the destination. The term semantic refers to the operational role of the node and the priority of the message. The protocol combines both dimensions with encounter history and transitive delivery prediction. Its aim is not simply to maximize all message delivery, but to preserve the delivery of critical messages when traffic load increases and buffers become congested.
+
+\section{Need for Delay Tolerant Routing}
+Traditional \ac{manet} routing protocols generally depend on the existence or discovery of a contemporaneous path. This assumption is weak in sparse, mobile, and damaged-network conditions. In contrast, \ac{dtn} routing accepts that contacts may be rare and that the best relay at the present time may only be useful because of where it is likely to move later. Routing therefore becomes a decision problem: when two nodes meet, each protocol must decide which messages should be copied, how many copies should be transferred, and whether the receiver is more useful than the current carrier.
+
+Three broad routing behaviors are relevant to this project. Epidemic routing floods messages to every encountered node that does not already hold the message \citep{vahdat2000epidemic}. Spray and Wait limits the number of copies and then waits for a direct encounter with the destination \citep{spyropoulos2005spray}. Prediction-based protocols such as \ac{prophet} use encounter history and transitivity to forward to more promising carriers \citep{lindgren2012prophet}. The proposed protocol draws from these ideas but adds spatial zones, semantic node roles, critical-message buffer reservation, and hybrid copy allocation.
+
+\section{Motivation}
+The practical motivation is emergency communication. In a disaster area, messages are not equally important. A medical alert, shelter request, or responder coordination update should not be treated like routine background information. A routing protocol that achieves high average delivery but loses urgent messages under congestion is unsuitable for this use case.
+
+The technical motivation is that existing baselines expose opposite weaknesses. Epidemic routing can deliver well in light traffic, but its uncontrolled replication creates high overhead and buffer pressure. Spray and Wait controls overhead, but its conservative forwarding can delay or miss urgent messages when the limited copies are held by weak carriers. The proposed protocol attempts to occupy the useful middle ground: it forwards aggressively when a message is critical or when enough copies exist, but it becomes selective as copies become scarce.
+
+\section{Scope of the Project}
+The scope of the project includes the design, implementation, and simulation-based evaluation of a spatio-semantic routing protocol for a disaster-response \ac{dtn}. The implementation is written in Python and compares three protocols:
+
+\begin{itemize}
+	\item Epidemic routing as the flooding baseline.
+	\item Spray and Wait routing as the copy-limited baseline.
+	\item Spatio-Semantic routing as the proposed protocol.
+\end{itemize}
+
+The simulator models a square disaster area, wireless contact range, finite node buffers, message generation under three traffic levels, critical and non-critical messages, random waypoint mobility, static shelters, and fast drones. The evaluation uses delivery ratio, critical delivery ratio, average delay, average critical delay, overhead ratio, and buffer drops.
+
+The project does not implement a real wireless deployment, cryptographic security, energy consumption, interference modeling, or real map-based mobility. These are outside the current thesis scope. The results should therefore be interpreted as simulation evidence for the protocol design rather than as direct field deployment measurements.

@@ -1,0 +1,73 @@
+\chapter{\MakeUppercase{Results and Discussion}}
+\section{Aggregate Results}
+Table \ref{tab:results_summary} summarizes the averaged simulation results. The values are taken from the generated result files in the \verb|plots| directory.
+
+\begin{table}[h!]
+	\centering
+	\caption{Average simulation results across traffic levels}
+	\renewcommand{\arraystretch}{1.25}
+	\resizebox{\textwidth}{!}{
+	\begin{tabular}{|l|l|c|c|c|c|c|}
+		\hline
+		\textbf{Protocol} & \textbf{Traffic} & \textbf{Delivery Ratio} & \textbf{Critical Delivery Ratio} & \textbf{Avg. Delay} & \textbf{Avg. Critical Delay} & \textbf{Overhead Ratio} \\
+		\hline
+		Epidemic & Low & 0.862 & 0.869 & 878.94 & 887.88 & 26.18 \\
+		Epidemic & Medium & 0.851 & 0.814 & 983.63 & 981.18 & 26.61 \\
+		Epidemic & High & 0.366 & 0.219 & 1829.59 & 1824.28 & 32.86 \\
+		\hline
+		Spray and Wait & Low & 0.764 & 0.768 & 1196.41 & 1192.24 & 8.43 \\
+		Spray and Wait & Medium & 0.752 & 0.743 & 1157.54 & 1181.98 & 8.46 \\
+		Spray and Wait & High & 0.682 & 0.577 & 1381.25 & 1375.01 & 8.87 \\
+		\hline
+		Spatio-Semantic & Low & 0.866 & 0.871 & 916.24 & 925.13 & 26.54 \\
+		Spatio-Semantic & Medium & 0.860 & 0.828 & 945.70 & 925.65 & 25.61 \\
+		Spatio-Semantic & High & 0.734 & 0.582 & 1377.54 & 1121.35 & 19.94 \\
+		\hline
+	\end{tabular}}
+	\label{tab:results_summary}
+\end{table}
+
+\begin{table}[h!]
+	\centering
+	\caption{Buffer drops across traffic levels}
+	\renewcommand{\arraystretch}{1.25}
+	\begin{tabular}{|l|c|c|c|}
+		\hline
+		\textbf{Protocol} & \textbf{Low} & \textbf{Medium} & \textbf{High} \\
+		\hline
+		Epidemic & 0.00 & 39.50 & 828.40 \\
+		\hline
+		Spray and Wait & 0.00 & 1.45 & 316.80 \\
+		\hline
+		Spatio-Semantic & 0.00 & 31.50 & 588.55 \\
+		\hline
+	\end{tabular}
+	\label{tab:buffer_drops}
+\end{table}
+
+\section{Delivery Ratio Analysis}
+At low traffic, Spatio-Semantic routing achieves a delivery ratio of 0.866, slightly above Epidemic routing at 0.862 and clearly above Spray and Wait at 0.764. This shows that the proposed utility rules do not harm reachability under light load.
+
+At medium traffic, Spatio-Semantic routing reaches 0.860, compared with 0.851 for Epidemic routing and 0.752 for Spray and Wait. The gain over Spray and Wait is important because it shows that utility-guided forwarding can recover delivery opportunities lost by conservative copy-limited routing.
+
+At high traffic, Epidemic routing collapses to 0.366 due to buffer pressure and excessive replication. Spray and Wait remains more stable at 0.682 because it controls copies. Spatio-Semantic routing achieves 0.734, which is 100.3 percent higher than Epidemic routing and 7.5 percent higher than Spray and Wait. This is the strongest evidence that the proposed protocol is better suited to congested disaster \acp{dtn}.
+
+\section{Critical Delivery Analysis}
+Critical delivery ratio is the most important metric for the thesis objective. Under high traffic, Epidemic routing delivers only 0.219 of critical messages, while Spray and Wait delivers 0.577 and Spatio-Semantic delivers 0.582. The proposed protocol improves critical delivery by 166.2 percent over Epidemic routing. It is only slightly above Spray and Wait in ratio, but this ratio must be interpreted together with critical delay.
+
+At medium traffic, Spatio-Semantic routing also performs best with a critical delivery ratio of 0.828 compared with 0.814 for Epidemic and 0.743 for Spray and Wait. The result indicates that the critical buffer reserve and priority-first forwarding help before the network reaches full congestion.
+
+\section{Delay Analysis}
+Delay is where the proposed protocol shows a major advantage over Spray and Wait. At high traffic, Spatio-Semantic routing reduces average critical delay to 1121.35 seconds. Epidemic routing requires 1824.28 seconds, and Spray and Wait requires 1375.01 seconds. Therefore, Spatio-Semantic routing reduces critical delay by 38.5 percent over Epidemic routing and 18.4 percent over Spray and Wait.
+
+This result is consistent with the protocol design. Spray and Wait conserves transmissions but often waits for direct delivery after copies become scarce. Spatio-Semantic routing continues to hand off messages to better carriers based on spatial, semantic, and encounter utility. Critical messages therefore move toward useful relays instead of remaining with weak carriers.
+
+\section{Overhead and Drop Analysis}
+The proposed protocol does not have the lowest overhead. Spray and Wait has the lowest overhead in all traffic levels because it is highly conservative. Under high traffic, Spray and Wait has an overhead ratio of 8.87, while Spatio-Semantic has 19.94. This is the main trade-off of the proposed design.
+
+However, Spatio-Semantic routing is still more efficient than Epidemic routing under high traffic. Epidemic reaches an overhead ratio of 32.86 and 828.40 buffer drops. Spatio-Semantic reduces overhead by 39.3 percent and drops by 29.0 percent compared with Epidemic routing. The protocol therefore avoids the worst flooding behavior while preserving better delivery and delay than the conservative baseline.
+
+\section{Overall Discussion}
+The results show that Spatio-Semantic routing is better than the compared protocols when the application values emergency delivery under stress. Epidemic routing is competitive only in low or moderate load but collapses under high traffic. Spray and Wait is efficient but slower and less adaptive. Spatio-Semantic routing uses additional transmissions purposefully: it favors drones, responders, nodes that visit destination zones, nodes with useful encounter histories, and critical-message preservation.
+
+The most defensible conclusion is not that Spatio-Semantic routing is always the cheapest protocol. It is not. The correct conclusion is that it provides a stronger disaster-response trade-off: higher delivery than both baselines under high traffic, much better critical delay than both baselines under high traffic, and much better congestion behavior than Epidemic routing.

@@ -1,0 +1,68 @@
+\chapter{\MakeUppercase{Technical Specification}}
+
+\section{Requirements}
+\subsection{Functional Requirements}
+The system must simulate a disaster-response \ac{dtn} and execute multiple routing protocols under identical conditions. It must create heterogeneous nodes, generate messages probabilistically, detect wireless contacts, exchange messages through the selected router, expire messages after their \ac{ttl}, and compute performance metrics after each run.
+
+The routing layer must support at least three protocols: Epidemic, Spray and Wait, and Spatio-Semantic. The proposed router must maintain encounter information, zone visit information, and role-aware forwarding decisions. It must reserve buffer space for critical messages and allow critical messages to evict non-critical messages when necessary.
+
+\subsection{Non-Functional Requirements}
+The simulator should be reproducible, simple to modify, and fast enough to run repeated experiments. The implementation should store aggregated results in \ac{csv} format so that the dashboard and thesis tables can be generated from the same evidence. The routing logic should be modular so that new protocols can be added without changing the environment.
+
+\section{Feasibility Study}
+The project is technically feasible because all components can be implemented using standard Python data structures and deterministic simulation steps. Contact detection uses Euclidean distance. Mobility uses a random waypoint model. Message buffers are represented as lists. Routing protocols are implemented as classes with a common exchange interface.
+
+The simulation approach is also academically feasible because \ac{dtn} protocols are commonly evaluated through simulation due to the cost and variability of field deployments. Tools such as the ONE simulator demonstrate the established practice of simulation-based \ac{dtn} protocol evaluation \citep{keranen2009one}. This project uses a custom simulator so that node roles, critical-message logic, and protocol internals can be controlled directly.
+
+\section{System Specification}
+The major simulation parameters are shown in Table \ref{tab:sim_parameters}. These parameters intentionally create a stressed environment: a large area, short contact range, finite buffer, high critical-message proportion, and multiple traffic levels.
+
+\begin{table}[h!]
+	\centering
+	\caption{Simulation parameters}
+	\renewcommand{\arraystretch}{1.3}
+	\resizebox{\textwidth}{!}{
+	\begin{tabular}{|l|l|l|}
+		\hline
+		\textbf{Parameter} & \textbf{Value} & \textbf{Purpose} \\
+		\hline
+		Simulation area & 2200 by 2200 units & Creates sparse contacts and movement diversity \\
+		\hline
+		Transmission range & 90 units & Limits contact opportunities \\
+		\hline
+		Buffer size & 30 messages per node & Forces meaningful buffer decisions \\
+		\hline
+		Simulation duration & 8000 time steps & Allows encounter and zone history to develop \\
+		\hline
+		Message \ac{ttl} & 2500 time steps & Penalizes delayed or wasted forwarding \\
+		\hline
+		Critical-message probability & 0.45 & Stresses priority handling \\
+		\hline
+		Critical copies & 16 initial copies & Allows urgent messages to spread when useful \\
+		\hline
+		Non-critical copies & 8 initial copies & Provides controlled replication for ordinary messages \\
+		\hline
+		Traffic levels & Low, Medium, High & Tests behavior from light load to congestion \\
+		\hline
+	\end{tabular}}
+	\label{tab:sim_parameters}
+\end{table}
+
+\section{Node and Traffic Model}
+The network contains 35 civilians, 8 responders, 3 shelters, and 5 drones. Civilians move slowly, responders move at medium speed, shelters remain static, and drones move quickly. The shelter nodes are placed in a clustered region to represent emergency coordination points. Drones are initialized as fast relays and are useful for carrying messages across partitions.
+
+Messages are generated at each time step according to the selected traffic probability. A generated message chooses a random destination other than the source. Each message has a creation time, unique identifier, hop count, critical flag, copy count, and destination. Delivered messages are counted once and then removed from all buffers.
+
+\section{Performance Metrics}
+The following metrics are used:
+
+\begin{itemize}
+	\item Delivery ratio: delivered messages divided by generated messages.
+	\item Critical delivery ratio: delivered critical messages divided by generated critical messages.
+	\item Average delay: average time between message creation and delivery.
+	\item Average critical delay: average delay for critical messages only.
+	\item Overhead ratio: transmissions divided by delivered messages.
+	\item Buffer drops: number of insertion failures or forced drops caused by buffer pressure.
+\end{itemize}
+
+These metrics reveal different protocol properties. Delivery ratio measures reachability, critical delivery ratio measures emergency effectiveness, delay measures timeliness, overhead ratio measures resource cost, and buffer drops measure congestion pressure.

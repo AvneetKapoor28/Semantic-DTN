@@ -52,3 +52,59 @@ The dashboard provides trend graphs, radar charts, raw data tables, and a launch
     \caption{Raw aggregated simulation results in the dashboard}
     \label{fig:raw_data_placeholder}
 \end{figure}
+
+\section{Message Life Cycle in the Code}
+A message begins when the environment calls the message generation routine. The source node is the node that generated it, and the destination is selected randomly from the remaining nodes. The message receives a unique identifier so that copies of the same message can be recognized across buffers. This is important because a router should not add duplicate copies to a node that already has the message.
+
+After generation, the message stays in the source buffer until it is forwarded, delivered, dropped, or expired. During forwarding, routers clone the message instead of creating a completely unrelated object. The clone keeps the same identifier, source, destination, creation time, and priority. The hop count is increased when a copy is transferred. This allows the environment to track delivery without counting every copy as a new message.
+
+When a node carrying a message becomes the destination node, the environment records the delivery delay and removes all copies of that message from every buffer. This cleanup is important because otherwise delivered messages would continue to circulate and inflate the transmission count. The simulator also expires messages after the configured \ac{ttl}. Expiration represents the idea that stale emergency information loses value.
+
+\section{Contact Detection Implementation}
+The environment checks contacts by measuring the Euclidean distance between every pair of nodes. If the distance is less than or equal to the transmission range, the pair is treated as connected for that time step. The router then receives the pair and may exchange messages in both directions.
+
+This contact model is simple but suitable for the thesis. It focuses on whether mobility creates forwarding opportunities. It does not model bandwidth, signal fading, or interference. Those details would be important for a deployment study, but they would also make it harder to isolate the routing logic. In this project, the aim is to compare forwarding policies under the same contact opportunities.
+
+\section{Implementation of Encounter and Zone Memory}
+The proposed router attaches encounter and zone tables to nodes as needed. This avoids changing the base node class for every router. The encounter table stores how often a node has met other nodes. The zone table stores how often a node has visited different parts of the area. Both tables decay over time so that old behavior gradually becomes less important.
+
+Decay is necessary because mobility patterns can change. If a node met a destination many times early in the simulation but then moved away, the old contacts should not dominate forever. The same is true for zone visits. A node that used to visit a shelter zone should remain somewhat useful, but the usefulness should fade if it stops going there.
+
+\section{Copy Management}
+Copy management is one of the main differences between the routers. Epidemic routing does not use copy limits in a meaningful way; it clones messages whenever possible. Spray and Wait uses copies to control spreading. The proposed router also uses copies, but it distributes them differently depending on priority and utility.
+
+For critical messages with many copies, the proposed router can transfer multiple copies at once. If the receiver is a drone, it may receive a larger share because its speed makes it a better relay. For non-critical messages, the spray phase is more controlled. In the utility phase, the number of copies transferred depends on the utility gain. This makes copy allocation more adaptive than giving exactly one copy at every contact.
+
+\section{Implementation Challenges}
+One challenge was avoiding unfair comparison. If the proposed router used a different environment or different message generation rules, the results would not be meaningful. For that reason, all routers use the same environment and metric counters. Only the exchange logic differs.
+
+Another challenge was balancing aggressiveness. If the proposed router forwards too freely, it becomes close to Epidemic routing and suffers the same congestion. If it forwards too conservatively, it becomes close to Spray and Wait and loses its delay advantage. The current design uses a spray threshold, utility gain checks, and priority handling to maintain that balance.
+
+The buffer reserve was also important. A simple utility router could still lose critical messages if non-critical messages fill the buffers first. The reserve directly protects emergency traffic. It is not just an optimization; it is part of the protocol's purpose.
+
+\section{Dashboard Design}
+The dashboard was implemented to make result interpretation easier. The trend charts show how each metric changes from low to high traffic. The radar chart is useful because it shows trade-offs in one view. The raw data tab is included so that the plotted values are visible and not hidden behind graphics.
+
+The live simulation is not used as the primary source of numerical evidence, but it helps explain the protocols. Seeing the three panels side by side makes the behavior easier to understand. Epidemic routing tends to create many transmissions. Spray and Wait appears more conservative. Spatio-Semantic routing shows a middle path where forwarding is active but more selective.
+
+\section{Statistics Implementation}
+The environment stores statistics in a dictionary. The main counters are generated messages, delivered messages, generated critical messages, delivered critical messages, transmissions, delays, critical delays, hop counts, and drops. These counters are updated during message generation, forwarding, delivery, and buffer failure.
+
+The delivery ratio is calculated as delivered messages divided by generated messages. Critical delivery ratio is calculated similarly, but only for critical messages. Delay values are stored as lists because the average can only be calculated after deliveries occur. Overhead ratio is calculated as transmissions divided by delivered messages, which connects resource cost to useful output.
+
+This statistics design is simple, but it is transparent. Each metric can be traced to a specific event in the simulation. That makes the result tables easier to trust and easier to explain.
+
+\section{Experiment Runner}
+The experiment runner in \verb|main.py| controls the batch evaluation. It defines three traffic levels and executes each protocol for 20 runs per level. After each set of runs, it uses the average of the collected metrics and writes the final row to a \ac{csv} file.
+
+The runner also supports selecting one protocol from the command line. This is useful during development because a single protocol can be tested without rerunning all experiments. For the final comparison, the all-protocol mode is used so that the three result files are generated under the same experiment structure.
+
+\section{Use of Existing Libraries}
+The core simulation is implemented with standard Python logic. The experiment runner uses a data library to average results and write \ac{csv} files. The dashboard uses Streamlit and Plotly for visualization. These libraries are used for presentation and data handling, not for hiding the routing behavior. The routing decisions remain visible in the router files.
+
+This is an important distinction. The project does not depend on a black-box routing library. The proposed protocol is implemented directly, so the thesis can explain every part of it. External libraries are used only where they make the experiment easier to run or view.
+
+\section{Maintainability}
+The code is organized so that a new router can be added with limited changes. A new routing class only needs to implement the exchange behavior expected by the environment. This makes the project extensible. Future protocols such as \ac{prophet} or MaxProp could be added to the same comparison framework.
+
+The current code also keeps the result pipeline simple. Simulation outputs go into the \verb|plots| folder, and the dashboard reads from that folder. This avoids hard-coded hidden data and makes it clear which files support the thesis results.

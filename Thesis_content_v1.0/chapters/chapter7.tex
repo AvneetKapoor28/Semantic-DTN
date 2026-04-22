@@ -71,3 +71,53 @@ However, Spatio-Semantic routing is still more efficient than Epidemic routing u
 The results show that Spatio-Semantic routing is better than the compared protocols when the application values emergency delivery under stress. Epidemic routing is competitive only in low or moderate load but collapses under high traffic. Spray and Wait is efficient but slower and less adaptive. Spatio-Semantic routing uses additional transmissions purposefully: it favors drones, responders, nodes that visit destination zones, nodes with useful encounter histories, and critical-message preservation.
 
 The most defensible conclusion is not that Spatio-Semantic routing is always the cheapest protocol. It is not. The correct conclusion is that it provides a stronger disaster-response trade-off: higher delivery than both baselines under high traffic, much better critical delay than both baselines under high traffic, and much better congestion behavior than Epidemic routing.
+
+\section{Low Traffic Discussion}
+The low traffic case is useful because it shows that the proposed protocol does not create a penalty when the network is lightly loaded. Spatio-Semantic routing has a delivery ratio of 0.866, which is almost the same as Epidemic routing and higher than Spray and Wait. This means the extra decision logic does not prevent messages from spreading when enough buffer space is available.
+
+The critical delivery ratio follows the same pattern. Spatio-Semantic routing reaches 0.871, Epidemic routing reaches 0.869, and Spray and Wait reaches 0.768. The difference between Spatio-Semantic and Epidemic is small in this condition because there is little congestion. When buffers are not under pressure, even a flooding protocol can serve critical traffic well. The main weakness of Spray and Wait at low traffic is not congestion but delay and limited spreading.
+
+The overhead result must also be read carefully. Spatio-Semantic routing has overhead close to Epidemic routing in low traffic. This is expected because the proposed router is intentionally aggressive when copies are available. In a lightly loaded network, this does not create drops, so the cost is mainly additional transmissions. The thesis does not claim that this is always desirable, but it shows that the protocol prioritizes delivery and timeliness.
+
+\section{Medium Traffic Discussion}
+The medium traffic case is where the differences begin to matter. Epidemic routing still performs reasonably, but buffer drops appear. Spray and Wait keeps drops very low, but its delivery ratio remains below the other two protocols. Spatio-Semantic routing achieves the best delivery and critical delivery among the three.
+
+The critical delay result is especially important. Spatio-Semantic routing has an average critical delay of 925.65 seconds, while Epidemic has 981.18 seconds and Spray and Wait has 1181.98 seconds. This shows that the proposed protocol is not only delivering critical messages; it is delivering them sooner. The improvement over Spray and Wait is consistent with the design, because the proposed router does not simply wait for direct destination contact after copies become scarce.
+
+The medium traffic result also shows the cost of the proposed approach. Its overhead is much closer to Epidemic routing than to Spray and Wait. This cost is acceptable only if the application values the delivery and delay improvements. In a disaster-response network, that is a reasonable assumption, but it should still be stated openly.
+
+\section{High Traffic Discussion}
+The high traffic case is the main stress test. It is also where the proposed protocol has the clearest advantage over Epidemic routing. Epidemic delivery ratio drops to 0.366. This is not because flooding is conceptually unable to deliver messages; it is because flooding creates too much pressure when message generation is high and buffers are finite. The network spends many transmissions, fills buffers, and drops messages.
+
+Spray and Wait handles congestion better because it controls copies. Its delivery ratio of 0.682 is much higher than Epidemic under high traffic. However, Spatio-Semantic routing still improves delivery to 0.734. This gain shows that copy control alone is not the full answer. The network also benefits from selecting better carriers.
+
+The critical delay result is the strongest part of the high traffic outcome. Spatio-Semantic routing reduces critical delay to 1121.35 seconds. Compared with Epidemic routing, this is a reduction of about 703 seconds. Compared with Spray and Wait, it is a reduction of about 254 seconds. In emergency communication, a reduction of several minutes can be meaningful. It means that urgent messages are moving through better relays instead of waiting with poor carriers or being buried under uncontrolled flooding.
+
+\section{Why the Proposed Protocol Wins Under Stress}
+The proposed protocol wins under stress because it handles three problems at the same time. First, it avoids blind flooding by checking utility when copies become scarce. Second, it avoids passive waiting by allowing useful handoffs even after the spray phase. Third, it protects critical messages through forwarding order and buffer reservation.
+
+Epidemic routing solves only one of these problems: it spreads messages widely. Spray and Wait solves another: it limits copies. Spatio-Semantic routing combines spreading, selection, and priority. This combination is why it performs well under high traffic.
+
+The drone role also helps. Drones move faster than other nodes, so they can connect separated areas more often. The proposed protocol gives drones a role bonus and sometimes a larger share of copies. This is not arbitrary; it reflects the operational meaning of drones in the scenario. A fast mobile relay should be used differently from a slow civilian node.
+
+\section{What the Results Do Not Claim}
+The results do not prove that Spatio-Semantic routing is optimal. The weights were selected manually. The simulator uses a simplified mobility model. Real wireless links are not modeled. The result also does not show that the protocol will beat every advanced \ac{dtn} router. It was compared with Epidemic routing and Spray and Wait, which are important baselines but not the only possible alternatives.
+
+The results also do not show that overhead is unimportant. Spray and Wait remains the best protocol if the only goal is to minimize transmissions. The thesis claim is about a different goal: improving emergency delivery under congestion. In that goal, the overhead is a cost paid for better critical-message behavior.
+
+\section{Practical Interpretation}
+In practical terms, the proposed protocol would be most useful in a managed emergency network where devices know their roles and can mark messages as critical. It would be less useful in a completely anonymous network where roles are unknown or untrusted. It would also need security checks before deployment, because a malicious node could claim to be a drone or mark all messages as critical.
+
+The results suggest that emergency communication systems should not treat all carriers and messages the same. Even simple context can improve routing. The protocol does not need a full map, a central server, or perfect prediction. It only needs local memory, rough zones, node roles, and message priority. This makes the idea practical enough for further development.
+
+\section{Answer to the Research Questions}
+The first research question asked whether role-aware and zone-aware forwarding can maintain high delivery under congestion. The answer from the high traffic result is yes. Spatio-Semantic routing delivers 0.734 of generated messages, while Epidemic routing delivers 0.366 and Spray and Wait delivers 0.682. The proposed protocol therefore keeps delivery higher than both baselines in the most difficult scenario.
+
+The second research question asked whether critical-message handling improves emergency behavior. The answer is also yes, especially when critical delay is considered. Spatio-Semantic routing has the lowest high-traffic critical delay among the three protocols. It also has the best high-traffic critical delivery ratio, although the margin over Spray and Wait is small.
+
+The third research question asked whether the improvement is worth the cost. The answer depends on the application. If the application values minimum overhead above all else, Spray and Wait is better. If the application values emergency delivery under congestion, the proposed protocol provides a stronger trade-off. This is the interpretation adopted in the thesis.
+
+\section{Recommended Figures for This Chapter}
+When screenshots are added, Chapter 7 should ideally include a metric trend figure or refer back to the dashboard figure from Chapter 5. The most useful screenshot is the one showing high traffic behavior, because the separation between the protocols is clearest there. A raw data screenshot is also useful because it shows that the tables are based on generated outputs rather than manually invented values.
+
+If only one screenshot is added to support the results, it should be the dashboard trend view containing delivery ratio, critical delivery ratio, average critical delay, overhead ratio, and buffer drops. If two screenshots are added, the second should be the radar chart for high traffic because it makes the trade-off visually clear.

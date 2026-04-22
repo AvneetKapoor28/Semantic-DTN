@@ -19,6 +19,71 @@ Future work can improve the project in the following ways:
 	\item Implement a small real-device prototype using phones or embedded boards.
 \end{itemize}
 
+\section{Design Lessons Learned}
+The first lesson from the project is that more forwarding is not always better. Epidemic routing is attractive because it is simple and aggressive, but the results show that aggressive replication can fail when traffic increases. A routing protocol must consider the cost of every copy, especially when buffers are small.
+
+The second lesson is that very low overhead is not always enough. Spray and Wait is efficient, but the delay results show that conserving transmissions can come at the cost of slower critical delivery. For emergency networks, delay can be as important as delivery ratio. A message that arrives too late may no longer be useful.
+
+The third lesson is that context helps. Spatial history, encounter history, node role, and message priority each provide partial evidence. None of them is perfect alone. A node may be close but not useful. A drone may be fast but moving in the wrong area. A node may have old encounter history that no longer applies. Combining the evidence gives the router a more balanced decision.
+
+\section{Deployment Considerations}
+If this protocol were moved toward a real deployment, several practical issues would need to be addressed. The first is role authentication. The protocol gives value to roles such as drone and responder. In a real system, nodes should not be able to claim these roles without verification. Otherwise, false role claims could distort routing.
+
+The second issue is priority control. Critical-message priority is useful only if it is not abused. A real system would need rules for who can mark a message as critical and how critical traffic is audited. Without this, every sender might mark every message as critical, which would remove the purpose of the reserve.
+
+The third issue is energy. Drones and mobile devices have limited battery life. A protocol that uses drones heavily must consider whether the drone has enough energy to keep relaying. The current simulator does not model energy, so this is an important extension before field use.
+
+\section{Broader Relevance}
+Although the project is written around a disaster-response scenario, the idea can apply to other intermittently connected networks. Wildlife monitoring, rural connectivity, military field networks, vehicular networks, and temporary event networks can all have intermittent contacts and meaningful node roles. In each case, the semantic labels would change, but the idea remains the same: route differently when nodes have different functions.
+
+For example, in a rural connectivity system, buses or service vehicles may act like high-value relays because they move between villages regularly. In a vehicular network, emergency vehicles may be more important carriers than private cars. In a field sensor network, mobile collectors may deserve a role bonus. These examples show that the protocol is not limited to the exact roles used in the simulator.
+
+\section{Limitations}
+The main limitation is that the evaluation is simulation-based. Simulation is appropriate for a capstone thesis, but it cannot capture every detail of real wireless communication. The movement model is also simplified. Real disaster movement would depend on roads, blocked areas, human decisions, rescue plans, and changing priorities.
+
+Another limitation is that the protocol weights are fixed. The utility function works well for the current scenario, but another environment may need different weights. A future version should either tune the weights automatically or provide a configuration method based on the deployment.
+
+The current comparison is also limited to two baselines. Epidemic routing and Spray and Wait are important, but future work should include \ac{prophet}, MaxProp, and social or geographic protocols. That would give a stronger understanding of where Spatio-Semantic routing fits among more advanced routing families.
+
+\section{Final Remarks}
+The central idea of the thesis is simple: routing in a disaster \ac{dtn} should use the meaning already present in the environment. It should notice that drones, responders, shelters, civilians, critical messages, destination zones, and repeated encounters are not interchangeable. The proposed protocol turns that observation into a working routing design and tests it against two clear baselines.
+
+The results support the main aim of the project. Spatio-Semantic routing is not the cheapest protocol, but it is more suitable for the chosen emergency objective. It keeps delivery high under high traffic, protects critical traffic better than flooding, and delivers urgent messages faster than conservative copy-limited routing. That is the practical value of the work.
+
+\section{Future Work in Detail}
+The most immediate future improvement is to add more baselines. \ac{prophet} would be a natural next comparison because it already uses encounter history and transitivity. MaxProp would also be useful because it includes prioritization ideas. Comparing against these protocols would show whether the spatial and semantic additions still help against more advanced prediction-based methods.
+
+The second improvement is to store richer experiment data. The current thesis uses averaged \ac{csv} files. Future work should store every run separately, including random seeds, generated message counts, delivery counts, delays, and drops. This would allow confidence intervals and statistical tests. It would also make the result section stronger for publication.
+
+The third improvement is real mobility. Random waypoint movement is acceptable for this project, but real disaster movement is not random. Responders follow roads, drones may follow search patterns, civilians may move toward shelters, and some regions may be blocked. A map-based version of the simulator would make the scenario more realistic.
+
+\section{Ethical and Practical Concerns}
+Emergency communication systems affect safety. A routing protocol that prioritizes some messages over others must be designed carefully. If the priority mechanism is misused, important messages may be delayed. If role information is false, the network may forward through poor or malicious carriers. These concerns are outside the simulation, but they matter for deployment.
+
+The project therefore should be seen as a routing design study, not a finished emergency product. Before field use, the protocol would need authentication, access control, privacy protection, and testing with real users. It would also need policies for message priority so that the network does not become unfair or overloaded by false critical traffic.
+
+\section{Personal Technical Reflection}
+The project shows that a useful protocol does not always need a very complex model. The most important step was identifying what information was naturally available in the scenario. Node roles, rough zones, encounter history, and message priority are all simple pieces of information. The value comes from combining them in the forwarding decision.
+
+The implementation also shows the importance of measuring trade-offs honestly. It would be easy to focus only on delivery ratio and ignore overhead. It would also be easy to focus only on overhead and ignore emergency delay. A good evaluation needs both sides. The proposed protocol is strongest when the discussion accepts both its benefit and its cost.
+
+\section{Closing Summary}
+The completed thesis demonstrates a full path from problem identification to protocol design, implementation, testing, and discussion. The problem is intermittent disaster communication. The design is a spatio-semantic router. The implementation is a Python simulator with three comparable routing protocols. The evaluation shows that the proposed protocol improves high-traffic delivery and critical-message delay compared with the selected baselines.
+
+This makes the work useful as a foundation for further research. The current protocol can be improved, but the core direction is sound: disaster \acp{dtn} should use spatial context, semantic roles, and message priority instead of treating all contacts and all messages equally.
+
+\section{Summary of the Evidence}
+The evidence for the conclusion comes from both design reasoning and measured results. The design reasoning shows why the proposed protocol should help: it gives priority to critical messages, uses drones and responders more intelligently, remembers useful zones, and avoids completely blind replication when copies become scarce.
+
+The measured results show that this reasoning translates into better behavior in the simulator. The high traffic case is the clearest example. Epidemic routing suffers because it spreads too many copies. Spray and Wait avoids that flooding cost, but it is slower for urgent messages. Spatio-Semantic routing keeps the useful part of replication while adding better carrier selection. This is why it achieves stronger delivery and critical-delay results in the stressed case.
+
+The evidence also shows the boundary of the contribution. The proposed protocol is not a universal replacement for every routing method. It is not the lowest-overhead protocol. Its value is tied to the scenario where emergency traffic, heterogeneous roles, and congestion exist together. That boundary makes the conclusion more credible because it does not overstate the result.
+
+\section{Recommended Next Step}
+The most useful next step would be to add \ac{prophet} as a fourth protocol in the same simulator. Since \ac{prophet} already uses encounter history and transitivity, it would be a stronger comparison than Epidemic routing and Spray and Wait alone. If Spatio-Semantic routing still improves critical delay and delivery against \ac{prophet}, the case for spatial and semantic information would become stronger.
+
+After that, the simulator should be extended with map-based mobility. This would allow shelters, roads, blocked regions, and drone paths to be modeled more realistically. At that stage, screenshots and visualizations would also become more meaningful because they would show movement in a recognizable disaster layout rather than an abstract square field.
+
 \section*{Contributions}
 \addcontentsline{toc}{section}{Contributions}
 The major contributions of this thesis are:

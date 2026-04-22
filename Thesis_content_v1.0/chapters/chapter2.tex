@@ -50,3 +50,45 @@ The project was carried out in five phases. First, the simulator was defined wit
 	\end{tabular}}
 	\label{tab:protocol_focus}
 \end{table}
+
+\section{Categories of Existing DTN Routing}
+\ac{dtn} routing protocols can be grouped by the kind of information they use. The first group uses little or no prediction. Epidemic routing belongs to this group. It assumes that if a node meets another node, the safest action is to copy any message that the receiver does not already have. This is simple and robust, but it turns the network into a heavy replication system. When buffers are limited, the same behavior that improves reachability can also cause loss.
+
+The second group uses copy control. Spray and Wait is the most relevant example for this project. It accepts that replication is useful but limits the number of copies so that the network does not flood itself. This makes the protocol attractive in resource-constrained networks. The limitation is that copy control alone does not decide whether a receiver is actually a good carrier. If a copy is placed on a node that rarely meets useful contacts, that copy may remain idle until it expires.
+
+The third group uses prediction. Protocols such as \ac{prophet} estimate delivery predictability from encounter history and transitivity. This is a major improvement over blind forwarding because it recognizes that past contacts can say something about future contacts. The proposed protocol uses the same broad intuition, but it does not rely on encounter history alone. In the disaster model used here, role and zone information are also meaningful.
+
+The fourth group uses social or geographic context. Social forwarding uses ideas such as centrality, community, and repeated human contact patterns. Geographic routing uses location, movement direction, or region information. These approaches show that routing can improve when the network understands more than message identifiers and contact events. The Spatio-Semantic protocol takes a similar position, but it adapts the idea to a disaster-response simulator with shelters, responders, drones, and critical messages.
+
+\section{Limitations Observed in Baseline Protocols}
+The baselines are not weak protocols in general. They are used because they are well understood and because their behavior exposes important design tensions. Epidemic routing is useful when delivery is more important than resource use. It is also easy to implement and does not require prediction. However, it has no natural way to protect buffers from too many redundant copies. Once traffic becomes high, many transmissions are spent spreading messages that may not be important or useful.
+
+Spray and Wait solves part of that problem. By limiting copies, it prevents the rapid explosion of replicas. This is why its overhead remains low in the experiment. However, the implementation used here forwards one copy during spraying and waits for the destination once only one copy remains. That conservative behavior saves transmissions, but it can also increase delay. For critical messages, delay is not a minor inconvenience; it can be the difference between useful and late information.
+
+Both baselines also treat node roles in a limited way. Epidemic routing gives a copy to any node if space is available. Spray and Wait gives a copy based on copy count and message possession. Neither baseline asks whether the receiver is a drone, a responder, a shelter, or a civilian. This is one of the clearest reasons for adding semantic awareness.
+
+\section{Refined Objectives}
+The objectives listed earlier can be expanded into more concrete engineering goals. The first goal is to keep the protocol local. A routing decision should be made during an encounter using information stored at the nodes, not by assuming a central controller. This is important because a central controller may not exist in a disrupted network.
+
+The second goal is to give critical messages meaningful priority. Priority should not only be a label in the message object. It should change forwarding order, buffer access, and willingness to use faster relays. The proposed router therefore processes critical messages before non-critical messages and reserves part of the buffer for them.
+
+The third goal is to avoid a false choice between flooding and waiting. Epidemic routing floods too much under load, while Spray and Wait can wait too passively. The proposed router uses phases. When copies are plentiful, it spreads more freely. When copies are scarce, it checks whether the receiver has better utility. This makes the forwarding behavior change as the risk of wasting copies increases.
+
+The fourth goal is to make the comparison measurable. The thesis is not based only on verbal arguments. The protocol is compared using repeated simulation runs and the same metrics for all protocols. Delivery, delay, overhead, and drops are kept together because no single metric fully explains a routing protocol.
+
+\section{Expected Outcome}
+Before running the experiments, the expected outcome was that Spatio-Semantic routing would perform close to Epidemic routing in low traffic, outperform Epidemic routing in high traffic, and reduce delay compared with Spray and Wait. The results in Chapter 7 largely support this expectation. The proposed protocol does not beat Spray and Wait on overhead, and that is not hidden in the discussion. Instead, the thesis argues that the extra overhead is justified when it produces faster and more reliable critical-message delivery.
+
+This expectation also shaped the simulator. The high traffic case is important because it creates the condition where routing intelligence matters. If traffic is too low, almost every reasonable protocol can succeed. If the network is overloaded, the protocol must decide what to protect and where to forward. The thesis is mainly about that stressed condition.
+
+\section{Research Questions}
+The project can be summarized through three research questions. The first question is whether role-aware and zone-aware forwarding can maintain high delivery when the network becomes congested. This question is answered mainly through the delivery ratio results.
+
+The second question is whether critical-message handling improves emergency performance compared with protocols that treat all messages similarly. This question is answered through critical delivery ratio and average critical delay. These two metrics are kept separate because a protocol may deliver many critical messages but deliver them too late.
+
+The third question is whether the improvement is worth the cost. This is answered through overhead ratio and buffer drops. A protocol that improves delivery by creating extreme overhead may not be practical. The proposed protocol is therefore evaluated not only by what it delivers, but also by what it costs.
+
+\section{Hypothesis}
+The hypothesis of the work is that a routing protocol using spatial, semantic, and encounter information will provide a better disaster-response trade-off than Epidemic and Spray and Wait routing under high traffic. More specifically, it is expected to reduce the collapse seen in flooding and reduce the delay seen in conservative copy-limited routing.
+
+The hypothesis does not require the proposed protocol to win every metric. In fact, it is expected that Spray and Wait will remain better in overhead because it forwards less often. The expected contribution is a more useful balance: higher high-traffic delivery than the baselines and lower critical delay than the conservative baseline.

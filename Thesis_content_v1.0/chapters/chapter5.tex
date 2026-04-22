@@ -68,3 +68,53 @@ The protocol is considered successful if it satisfies the following criteria:
 	\item It should reduce critical-message delay compared with Spray and Wait, because emergency messages must not wait passively for direct delivery.
 	\item It should maintain a clear advantage in critical delivery ratio under congested conditions.
 \end{itemize}
+
+\section{Experiment Execution Procedure}
+Each experiment begins by creating a new environment with the chosen traffic probability. The environment creates the same types of nodes and initializes their mobility. A router is then attached to the environment. The simulation runs for 8000 time steps. During each time step, messages may be generated, nodes move, contacts are detected, exchanges are performed, deliveries are checked, and expired messages are removed.
+
+This procedure is repeated 20 times for each traffic level and each protocol. Averaging across runs is important because the simulator contains random message generation, random destinations, and random mobility choices. A single run could favor one protocol by chance. Repeated runs reduce the influence of one unusual movement pattern.
+
+The results are then written to protocol-specific \ac{csv} files. The dashboard reads these files rather than rerunning the simulation internally. This keeps the experiment and visualization stages separate. It also means the thesis tables can be checked against the same output that appears in the dashboard.
+
+\section{Reproducibility}
+Reproducibility is handled through simple file organization and explicit parameters. The constants for area size, transmission range, buffer size, and simulation duration are defined in the environment file. Traffic levels are defined in the experiment runner. The routing code for each protocol is placed in its own file.
+
+The current implementation does not store every random seed for every batch experiment. However, the experiment design is still reproducible in the practical sense that the same code and parameters can be rerun to generate a comparable set of averages. For a formal research publication, the next step would be to log seeds, per-run results, and confidence intervals. For this thesis, the main trends are large enough that the conclusion does not depend on a single run.
+
+\section{Why Three Traffic Levels Were Used}
+The three traffic levels are not arbitrary labels. They represent three different operating conditions. Low traffic checks whether a protocol behaves reasonably when the network is not stressed. Medium traffic checks the transition point where buffer pressure begins to appear. High traffic checks the disaster condition that matters most for this thesis: many messages compete for limited contacts and buffers.
+
+A protocol that only performs well under low traffic is not enough for emergency use. In a real disaster, traffic may increase exactly when the network is least reliable. People report incidents, responders coordinate movement, shelters update capacity, and drones may relay urgent information. The high traffic scenario is therefore the most important test of the proposed protocol.
+
+\section{Validation Through Baseline Behavior}
+The baseline results also act as a sanity check. Epidemic routing should have high delivery when traffic is light because it spreads messages widely. It should suffer under high traffic because flooding creates heavy buffer pressure. Spray and Wait should have lower overhead because it limits copies. These expected behaviors appear in the results, which increases confidence that the simulator is producing reasonable protocol dynamics.
+
+The proposed protocol is then judged relative to these baselines. It should not be compared to an imaginary perfect router. It should be compared to concrete alternatives that represent common routing ideas. This makes the discussion more honest and more useful.
+
+\section{Interpretation Method}
+The results are interpreted as trade-offs, not as a single leaderboard. For example, Spray and Wait has the lowest overhead, but it does not have the lowest critical delay. Epidemic routing can be competitive in light traffic, but it fails badly under high traffic. Spatio-Semantic routing improves high-traffic delivery and critical delay, but it uses more transmissions than Spray and Wait.
+
+This is why the thesis emphasizes the target application. If the goal were only to minimize transmissions, Spray and Wait would be preferred. If the goal were to flood as much as possible in a small uncongested network, Epidemic routing might be enough. But if the goal is emergency communication under congestion, critical delivery and critical delay become more important than raw overhead alone.
+
+\section{Threats to Validity}
+There are several threats to validity. The first is the mobility model. Random waypoint movement is useful for controlled testing, but real human and drone movement can be more structured. The second is the absence of wireless interference. Real radios may lose packets even when nodes are in range. The third is the simplified message model. Real emergency messages may have different sizes, deadlines, and categories.
+
+Another threat is that the proposed protocol has fixed weights. Different disaster layouts may need different weights. For example, if drones are rare or unreliable, the role bonus should be changed. If shelters are spread across the map rather than clustered, zone history may behave differently. These limitations do not invalidate the project, but they define where the result should be applied carefully.
+
+\section{Screenshot Placement}
+The screenshots requested for the thesis should be used to support the written interpretation rather than to decorate the report. The metric trend screenshot should be placed after the dashboard discussion because it shows how the six metrics change with traffic. The radar screenshot should be taken for high traffic because that is where the trade-off between delivery, delay, overhead, and drops is easiest to see. The live simulation screenshot should show all three protocols at the same time so that the reader can connect the numerical results with the movement and contact behavior.
+
+\section{Fairness of Comparison}
+Fair comparison is important in protocol evaluation. The same environment parameters are used for every protocol. The same traffic levels are used. The same metrics are collected. The same number of repeated runs is used. This makes it less likely that the proposed protocol is helped by a different test condition.
+
+The protocols are not identical in their internal state, and that is expected. Epidemic routing does not need encounter tables. Spray and Wait uses copy counts. Spatio-Semantic routing uses encounter history, zone history, and role information. The comparison is fair because each protocol is allowed to use the information that belongs to its design, while the external environment remains common.
+
+\section{Why Average Results Are Reported}
+The thesis reports averaged results because individual simulation runs can vary. In one run, a drone may happen to meet useful nodes early. In another run, a cluster of messages may appear in a poorly connected region. Averaging helps smooth these random events and makes the reported values more representative of protocol behavior.
+
+At the same time, average values should not be treated as the only possible analysis. A stronger future evaluation could include standard deviation, confidence intervals, and statistical significance tests. That would make the comparison more rigorous. The current thesis focuses on average behavior because the differences in the high traffic case are large and easy to interpret.
+
+\section{Testing the Thesis Claim}
+The testing method directly matches the thesis claim. Since the claim is that Spatio-Semantic routing is better for emergency communication under congestion, the most important evidence comes from high traffic critical delivery and high traffic critical delay. The low and medium traffic results are still included because they show whether the proposed protocol causes a penalty in easier conditions.
+
+This prevents selective interpretation. If the proposed protocol only performed well in one case and failed badly elsewhere, that would need to be discussed. The current results show a consistent pattern: the protocol is competitive in low traffic, strong in medium traffic, and most useful in high traffic.

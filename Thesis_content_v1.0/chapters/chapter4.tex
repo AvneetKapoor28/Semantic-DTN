@@ -71,3 +71,53 @@ The forwarding policy changes according to message priority and copy count. Crit
 
 \section{Buffer Management}
 The proposed router reserves 35 percent of each buffer for critical messages. Non-critical messages can use only the remaining buffer capacity. If a critical message arrives when the node is full, the router attempts to evict a non-critical message, prioritizing messages with redundant remaining copies. This design directly supports the thesis goal: emergency messages should survive congestion better than routine messages.
+
+\section{Module Responsibilities}
+The system design separates responsibilities so that the code remains understandable. The environment is responsible for the physical and temporal part of the simulation. It knows where nodes are, when time advances, which pairs are in range, and when a message reaches its destination. The router is responsible only for forwarding decisions. This is a clean separation because mobility and routing are related but not the same problem.
+
+The message object carries the information needed by every protocol: identity, source, destination, creation time, priority, hop count, and copy count. The node object stores its role, position, speed range, movement target, pause time, and buffer. This small object model makes the simulator easy to inspect. It also keeps the proposed protocol from depending on hidden global state.
+
+The dashboard is separated from the simulation. This matters because a visual chart should not change the experiment. The dashboard reads result files after the simulation has produced them. The live demo is mainly for explanation and observation. The numerical results used in the thesis come from the repeated experiment runner.
+
+\section{Utility Weight Rationale}
+The utility function uses fixed weights. These weights were chosen to reflect the relative importance of the available evidence. Direct encounter history receives the largest weight because repeated meetings are a strong sign that a node may be useful for delivery. Zone history and transitive evidence also receive substantial weight because they capture movement patterns beyond the current contact.
+
+Spatial proximity is useful but receives a smaller weight than encounter history. This is because the closest node is not always the best carrier in a mobile \ac{dtn}. A node can be close now and then move away. Role bonus also receives a limited weight. It should influence routing, but it should not dominate all other evidence. A drone is valuable, but a drone moving in an unrelated part of the area should not always beat a responder that frequently visits the destination zone.
+
+The chosen weights are therefore practical rather than mathematically optimal. They represent a first design that works well in the implemented scenario. In future work, these weights could be tuned through grid search, evolutionary optimization, or reinforcement learning. For this thesis, fixed weights make the protocol easier to explain and reproduce.
+
+\section{Forwarding Phases}
+The forwarding policy is divided into phases because the value of a copy changes as the number of remaining copies changes. When many copies exist, the risk of giving away a few copies is lower. The protocol can afford to spread the message, especially if it is critical. This is the spray phase.
+
+When only a moderate number of copies remain, each transfer becomes more important. The router compares the receiver utility against the sender utility. If the receiver is better, a proportional number of copies is transferred. This is the utility phase. It is the main place where spatio-semantic intelligence is used.
+
+When only one copy remains, forwarding becomes a handoff decision. A wrong handoff can permanently move the only remaining copy away from a better carrier. For that reason, the protocol requires a clearer utility gain. Critical messages are treated more flexibly because waiting too long can be harmful. Drones also receive special consideration because their movement gives them a better chance of meeting separated nodes.
+
+\section{Design Trade-Offs}
+The proposed design intentionally accepts some overhead. A protocol that never forwards except to the destination would have low overhead, but it would also miss many delivery opportunities. A protocol that forwards to everyone would have high reachability at first, but it would waste buffers under load. Spatio-Semantic routing is placed between these extremes.
+
+There is also a trade-off between simplicity and intelligence. A more complex protocol could use predicted trajectories, map constraints, battery state, message categories, and real-time responder assignments. That would be interesting, but it would also make the thesis harder to isolate. The current design uses information that is easy to maintain locally: contacts, zones, roles, and message priority.
+
+Another trade-off is fairness between message classes. Critical messages are prioritized, so non-critical messages may be delayed or dropped more often. In the target scenario, this is acceptable because the network is supporting emergency communication. In a general-purpose network, the policy might need to be adjusted to prevent starvation of ordinary traffic.
+
+\section{Failure Handling}
+The router does not assume that every forwarding attempt succeeds. A transfer can fail if the receiver has no available buffer space. In the proposed router, the buffer insertion logic checks whether the message is critical. If it is non-critical and the non-critical portion of the buffer is full, the message is dropped. If it is critical, the router first tries normal insertion and then attempts to evict a less important non-critical message.
+
+This failure handling is important because it turns message priority into an operational rule. Without it, a critical flag would only affect forwarding order, not storage. In high traffic, storage is often where the real competition happens. The proposed protocol therefore handles congestion at both the forwarding and buffer levels.
+
+\section{Sequence of an Encounter}
+When two nodes meet, the exchange begins by updating tracking information. The router records that the two nodes have encountered each other and updates their zone histories. This step is important because the current contact becomes evidence for future forwarding decisions.
+
+After tracking is updated, the router forwards from the first node to the second and then from the second node to the first. The sender buffer is copied into a temporary list before forwarding begins. This prevents the loop from being confused by messages that are added or modified during the exchange. The receiver's current message identifiers are also collected so that duplicate copies are not inserted.
+
+The forwarding pass handles critical messages before non-critical messages. This ordering is one of the simplest but most important design choices. If non-critical messages were processed first, they could consume receiver buffer space before urgent messages are considered. Processing critical messages first gives them a better chance during short contacts and congested buffers.
+
+\section{Local Decision-Making}
+The router is intentionally local. It does not ask the environment for a future route, and it does not compute a complete path. In a disrupted network, a complete path may not exist at the time of forwarding. A local decision is more realistic: when two devices meet, each device decides whether the other is a better carrier.
+
+This local design also reduces assumptions. The protocol does not need a central server or global topology table. It only needs information that nodes can collect while moving: encounters, zones, roles, and message metadata. This is important for disaster use, where infrastructure may be damaged and central coordination may be delayed.
+
+\section{Scalability Considerations}
+The design can scale conceptually, but the current implementation is not optimized for very large networks. The environment checks contacts by comparing every pair of nodes. This is acceptable for the node count used in the thesis, but it would be expensive for thousands of nodes. A larger version could use grid-based spatial indexing to check only nearby nodes.
+
+The routing state also grows with the number of encountered peers and visited zones. Zone history is naturally bounded by the number of zones, but encounter history can grow as a node meets more peers. In a larger deployment, old or low-value encounter entries could be removed to limit memory use. These are implementation refinements rather than changes to the main protocol idea.

@@ -66,3 +66,51 @@ The following metrics are used:
 \end{itemize}
 
 These metrics reveal different protocol properties. Delivery ratio measures reachability, critical delivery ratio measures emergency effectiveness, delay measures timeliness, overhead ratio measures resource cost, and buffer drops measure congestion pressure.
+
+\section{Software and Hardware Requirements}
+The project is designed to run on a normal laptop or desktop machine. The simulator itself does not require specialized networking hardware because all contacts, movements, and transmissions are modeled in software. Python is used for implementation, and the dashboard uses common data-analysis and visualization libraries. This makes the project easy to reproduce and modify during thesis work.
+
+The core simulator can be executed from the command line. The experiment runner produces \ac{csv} files, which are then read by the dashboard. This separation is useful because simulations can be rerun without opening the visualization, and the dashboard can be refreshed without changing the routing code. It also allows the thesis tables to be traced back to the generated output files.
+
+The hardware requirement is mainly processing time. Contact detection checks pairs of nodes, and routing decisions are made at every contact. The current node count is small enough for repeated runs to remain practical. If the project were scaled to thousands of nodes, the contact detection method would need spatial indexing or another optimization. For the current thesis scope, the simple method is acceptable and easier to verify.
+
+\section{Assumptions}
+The simulation uses several assumptions that must be stated clearly. First, every node has the same transmission range. This keeps the contact model consistent across roles. In a real deployment, drones or responders might use stronger radios, but that is not included here. Second, message transfer is treated as successful when two nodes are in range and the receiver buffer can accept the message. Packet loss, channel interference, and bandwidth contention are not modeled.
+
+Third, node roles are known to the routing protocol. This is reasonable in a managed emergency network where devices can be configured before deployment. Fourth, the destination of each message is known. The router is not solving the problem of destination discovery or naming. Fifth, all generated messages are either critical or non-critical. The project does not model multiple priority levels such as low, normal, high, and emergency.
+
+These assumptions are not weaknesses by themselves. They define the boundary of the work. A thesis simulator should be complex enough to test the central idea but not so complex that the results become impossible to interpret. The chosen assumptions keep the focus on spatio-semantic forwarding.
+
+\section{Routing Interface}
+Each router follows the same basic interface: it receives two nodes in contact and the shared statistics object. The router then decides what to transfer in both directions. This design keeps the environment independent of protocol details. The environment only knows that an exchange should happen; it does not know whether the router floods, sprays, waits, or calculates utility.
+
+This interface also makes the comparison fair. The three routers receive the same contact opportunities. They operate on the same node buffers. They update the same metric counters. Any difference in result therefore comes from the routing policy rather than from a separate environment.
+
+\section{Metric Rationale}
+The selected metrics were chosen because they reflect the main conflicts in \ac{dtn} routing. Delivery ratio is the most basic measure, but it is not enough. A protocol can deliver many messages but still deliver critical messages too late. For that reason, critical delivery ratio and average critical delay are given special attention.
+
+Overhead ratio is also essential. A protocol that achieves high delivery only by making a very large number of transmissions may be unsuitable for devices with limited energy or bandwidth. Buffer drops are related but not identical. A protocol may have high overhead without many drops if buffers remain available, or it may produce many drops when storage becomes the bottleneck. In this thesis, both values help explain congestion.
+
+Average delay and average critical delay are calculated only over delivered messages. This is a standard interpretation, but it should be read carefully. If a protocol delivers very few messages, the average delay of delivered messages does not describe messages that expired or were dropped. That is why delay is interpreted together with delivery ratio.
+
+\section{Data Handling}
+The results are stored in separate files for each protocol. Each row corresponds to one traffic level and contains averaged values over repeated runs. This format is simple, but it has a practical advantage: it prevents the dashboard from depending on hidden state inside the simulator. The thesis tables are based on visible \ac{csv} outputs.
+
+For a larger research study, the raw per-run values should also be stored so that confidence intervals and statistical tests can be reported. The current project stores averaged values because the aim is a capstone-level comparison and the trend is large enough to support the main conclusion. However, storing per-run logs would be a useful improvement for future work.
+
+\section{Parameter Sensitivity}
+Several parameters influence the behavior of the system. Buffer size is one of the most important. If buffers are very large, Epidemic routing suffers less because there is space for many redundant copies. If buffers are very small, all protocols become more constrained and priority handling becomes even more important. The selected buffer size of 30 creates enough pressure to reveal protocol differences without making delivery impossible.
+
+Transmission range also matters. A larger range would create more contacts and make the network less disrupted. A smaller range would make contacts rarer and could cause all protocols to deliver fewer messages. The selected range of 90 units in a 2200 by 2200 area creates sparse contacts, which is suitable for a \ac{dtn} study.
+
+The \ac{ttl} value affects whether delayed messages still count. A long \ac{ttl} would make slow delivery more acceptable, while a very short \ac{ttl} would punish all protocols harshly. The selected value gives messages time to move through the network but still penalizes weak forwarding decisions.
+
+\section{Operational Constraints}
+The simulator assumes finite storage and contact-based communication because these are central operational constraints in a disaster network. A node cannot carry unlimited messages. A node cannot forward when no contact exists. A message cannot remain useful forever. These constraints force the routing protocol to make choices.
+
+The proposed protocol is designed around these constraints. The buffer reserve addresses finite storage. Utility-based forwarding addresses limited contact opportunities. \ac{ttl} expiration addresses the time sensitivity of information. The technical specification therefore reflects the practical environment the protocol is meant to support.
+
+\section{Quality Requirements}
+In addition to functional behavior, the project has quality requirements. The code should be readable because the thesis depends on explaining the protocol clearly. The experiment should be repeatable because results must be generated again if parameters change. The output should be inspectable because numerical claims in the thesis should not be disconnected from the data files.
+
+The current project satisfies these requirements through modular files, visible constants, simple result files, and a dashboard that reads from those files. These are modest engineering choices, but they make the project easier to maintain and easier to defend during evaluation.

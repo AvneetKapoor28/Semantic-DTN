@@ -1,0 +1,52 @@
+\chapter{\MakeUppercase{Conclusion and Further Enhancements}}
+\section{Conclusion}
+This thesis presented a Spatio-Semantic routing protocol for disaster-response \acp{dtn}. The protocol was designed to address the limitations of two important baselines: Epidemic routing and Spray and Wait routing. Epidemic routing offers high replication but suffers from high overhead and buffer pressure. Spray and Wait reduces overhead but can delay urgent messages because it does not actively select semantically or spatially stronger carriers after copies become scarce.
+
+The proposed protocol combines encounter history, spatial zone visitation, physical proximity, semantic node roles, transitive delivery prediction, hybrid spray-and-utility forwarding, and a critical-message buffer reserve. These mechanisms make forwarding decisions more context aware. The simulation results support the thesis objective. Under high traffic, Spatio-Semantic routing achieves a delivery ratio of 0.734, compared with 0.366 for Epidemic routing and 0.682 for Spray and Wait. It improves critical delivery ratio by 166.2 percent over Epidemic routing and reduces critical delay by 38.5 percent over Epidemic routing and 18.4 percent over Spray and Wait.
+
+The protocol's main cost is overhead compared with Spray and Wait. This trade-off is acceptable for the target disaster scenario because the added transmissions are used to improve delivery timeliness and critical-message performance. The results show that the proposed protocol is most useful when the network is congested and message priority matters.
+
+\section{Summary of Findings}
+The thesis findings can be summarized in three points. First, adding spatial and semantic awareness to routing decisions improves robustness under stressed traffic conditions. Second, integrating message priority into both forwarding and buffer management produces better treatment of urgent traffic than a priority-neutral design. Third, a hybrid strategy can avoid the extreme weakness of both baselines: it avoids the uncontrolled congestion of flooding while remaining more adaptive than passive waiting.
+
+These findings are important because they align the protocol behavior with the application context. In a disaster-response network, the best routing policy is not simply the one with the fewest transmissions or the highest unconstrained reachability. It is the one that preserves useful communication when the environment is fragmented, mobile, and congested. The proposed protocol performs well precisely because it is designed around that application need.
+
+\section{Practical Implications}
+The practical implication of the thesis is that disaster-response routing benefits from understanding what different nodes represent in the field. A fast drone, a mobile responder, and a static shelter are not interchangeable carriers even if they all support the same wireless interface. By incorporating this distinction into forwarding decisions, the network can make better use of limited contact opportunities.
+
+The thesis also shows that priority support should be implemented as a routing-system feature rather than treated only as an application-layer label. If urgent messages are marked critical but the router still allocates buffer space and copies in the same way as for ordinary traffic, the operational value of that marking is limited. The critical reserve and forwarding priority used in this work demonstrate one practical way to translate message importance into network behavior.
+
+Another practical implication is that useful improvement does not always require unrealistic global knowledge. The proposed protocol operates using local observations, lightweight history, and a small amount of structured semantic information. This makes the design more plausible for decentralized deployment than a solution that depends on centralized coordination or perfect future prediction. Even within a simplified simulator, this principle is important because it aligns the routing logic with the constraints of opportunistic communication.
+
+\section{Further Enhancements}
+Future work can improve the project in the following ways:
+
+\begin{itemize}
+	\item Replace random waypoint movement with map-based mobility and real disaster-zone traces.
+	\item Add energy consumption and radio interference models.
+	\item Tune utility weights automatically using optimization or learning methods.
+	\item Add acknowledgement-based copy cleanup to reduce redundant replicas after delivery.
+	\item Extend semantic roles to include hospitals, command centers, ambulances, supply vehicles, and temporary base stations.
+	\item Evaluate the protocol against additional \ac{dtn} protocols such as \ac{prophet}, MaxProp, and Bubble Rap.
+	\item Implement a small real-device prototype using phones or embedded boards.
+\end{itemize}
+
+These enhancements fall into three broad categories. The first is realism: better mobility traces, richer radio models, and field prototypes would strengthen deployment relevance. The second is algorithmic improvement: adaptive utility weighting, acknowledgement-based cleanup, and broader role semantics could improve efficiency. The third is comparative evaluation: testing against additional routing families would clarify where the proposed protocol fits within the wider \ac{dtn} literature.
+
+\section*{Contributions}
+\addcontentsline{toc}{section}{Contributions}
+The major contributions of this thesis are:
+
+\begin{itemize}
+	\item A disaster-response \ac{dtn} routing design that combines spatial and semantic information.
+	\item A composite utility function using proximity, encounter history, zone memory, role relevance, and transitive contact evidence.
+	\item A critical-message-first forwarding and buffer-reservation policy.
+	\item A Python simulation framework comparing Epidemic, Spray and Wait, and Spatio-Semantic routing.
+	\item Experimental evidence showing improved high-traffic delivery and critical-delay behavior.
+\end{itemize}
+
+\section*{Final Remarks}
+\addcontentsline{toc}{section}{Final Remarks}
+The thesis demonstrates that meaningful gains can be achieved without requiring a fully complex or opaque routing system. By combining interpretable spatial evidence, semantic role awareness, and explicit support for critical traffic, the proposed router improves the behavior that matters most in a disaster-response setting. This makes the work a useful foundation for both further academic study and future prototype-oriented development.
+
+More broadly, the work reinforces the idea that network design should follow application priorities. In a disaster environment, successful communication is not measured only by how many messages eventually arrive. It is also measured by whether urgent information is preserved, advanced toward useful relays, and delivered in time to matter. The proposed Spatio-Semantic approach is a step toward that more application-aware view of \ac{dtn} routing.

@@ -15,6 +15,13 @@ Existing baseline protocols do not sufficiently address disaster-response priori
 
 Prediction-based and social protocols address parts of the problem, but many of them focus on human contact patterns or general delivery probability. A disaster setting also contains operational roles. A drone is not just another mobile node; it has faster movement and can bridge partitions. A shelter is not just a static node; it is likely to be a destination or coordination point. A responder is not only a relay; it is operationally meaningful for urgent messages. The research gap addressed here is the absence of a simple routing protocol that combines spatial evidence, semantic role evidence, and priority-aware buffer management for disaster \acp{dtn}.
 
+\section{Design Perspective for the Proposed Study}
+The design perspective of this project is that disaster routing should combine multiple weak signals rather than depend on a single strong assumption. Pure flooding assumes that more copies are always beneficial until resources collapse. Pure copy-limited routing assumes that strict control of replicas is the dominant requirement. History-based prediction assumes that future usefulness can be inferred mainly from repeated contacts. Each of these assumptions is partly correct, but none alone captures the mixed character of a disaster-response network.
+
+The proposed study therefore treats routing as a composite decision problem. A good relay is not defined by one property only. It may be useful because it is physically closer to the destination, because it frequently visits the destination zone, because it often meets the destination or nodes related to it, or because its operational role makes it likely to bridge disconnected parts of the network. The proposed protocol is designed around this combined view. Its purpose is not to imitate every existing advanced \ac{dtn} router, but to show that a compact integration of spatial and semantic context can improve behavior in a practical disaster scenario.
+
+This design perspective also motivates the priority-aware aspects of the work. In many routing studies, all messages are evaluated as equal units of traffic. That simplifies analysis, but it hides an important operational question: which messages should be protected first when the network becomes congested? This thesis explicitly answers that question by reserving buffer space for critical traffic and by allowing forwarding rules to respond differently to urgent messages.
+
 \section{Objectives}
 The objectives of this project are:
 
@@ -26,11 +33,23 @@ The objectives of this project are:
 	\item To show that the proposed protocol provides better critical-message behavior under congested disaster-network conditions.
 \end{itemize}
 
+\section{Research Questions and Expected Outcome}
+The work is guided by three practical research questions. First, can a routing strategy that combines spatial and semantic context preserve or improve delivery when compared with basic baselines? Second, does priority-aware forwarding meaningfully improve the treatment of critical traffic under medium and high load? Third, can the protocol avoid the collapse behavior of flooding while still being more adaptive than simple copy-limited waiting? These questions translate the broad project goal into measurable comparisons.
+
+The expected outcome is not that the proposed protocol will dominate every metric in every scenario. Spray and Wait is expected to remain stronger in raw overhead, especially under low load. Epidemic routing may remain competitive in uncongested conditions because aggressive replication can be beneficial when resources are abundant. The central expectation is narrower and more realistic: under the stressed conditions that matter most for disaster communication, the proposed router should provide a better overall trade-off by preserving delivery and significantly improving critical-message timeliness.
+
+\section{Significance of the Study}
+The significance of the study lies in both application value and methodological value. From an application perspective, disaster communication systems must support decisions that affect rescue coordination, safety, and resource allocation. A routing policy that improves urgent-message handling can therefore have meaning beyond a small numerical gain in simulation output. The work is motivated by the idea that network behavior should reflect operational priorities rather than treat all communication as interchangeable.
+
+From a methodological perspective, the study demonstrates how heterogeneous node roles can be incorporated into a routing design without making the model opaque. Many advanced protocols become difficult to interpret when they combine numerous signals in unclear ways. The proposed work keeps the logic explicit: proximity, encounters, zones, roles, and criticality each contribute a recognizable part of the forwarding process. This makes the thesis useful not only as a protocol proposal but also as a structured example of how to design and evaluate a context-aware \ac{dtn} router.
+
 \section{Problem Statement}
 Given a sparse mobile disaster-response network with finite buffers, intermittent contacts, heterogeneous node roles, and a mix of critical and non-critical messages, the problem is to decide which messages should be forwarded during each contact so that critical delivery and overall delivery remain high without causing the uncontrolled congestion associated with blind flooding.
 
 \section{Project Plan}
 The project was carried out in five phases. First, the simulator was defined with node roles, mobility, contact detection, message generation, \ac{ttl}, and metrics. Second, Epidemic and Spray and Wait baselines were implemented. Third, the Spatio-Semantic router was designed using a composite utility function and priority-aware buffer policy. Fourth, experiments were executed across three traffic levels for all protocols. Fifth, the output \ac{csv} files and dashboard visualization were used to compare the protocols and interpret the trade-offs.
+
+The plan was intentionally structured so that each later phase depended on artifacts from the previous phase. The simulator had to be stable before routing comparisons were meaningful. The baselines had to be implemented first so that the proposed protocol would be evaluated against known reference behaviors rather than against informal expectations. The data-export and dashboard components were also included as part of the plan instead of being treated as optional presentation features, because reproducible comparison is central to the credibility of the thesis.
 
 \begin{table}[h!]
 	\centering

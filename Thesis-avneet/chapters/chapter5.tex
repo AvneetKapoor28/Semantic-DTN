@@ -44,28 +44,62 @@ The project includes a Streamlit dashboard for plotting metric trends, radar com
 
 \begin{figure}[h!]
     \centering
-    \fbox{\parbox{0.88\textwidth}{\centering
-    Image placeholder: add a screenshot of the Streamlit Metric Trends tab showing delivery ratio, critical delivery ratio, delay, overhead, and buffer drops.}}
-    \caption{Dashboard metric trends for the three routing protocols}
-    \label{fig:dashboard_trends_placeholder}
+    \includegraphics[width=0.85\textwidth]{images/avg-critical-delay}
+    \caption{Average delivery delay for critical messages}
+    \label{fig:avg_critical_delay}
 \end{figure}
 
 \begin{figure}[h!]
     \centering
-    \fbox{\parbox{0.88\textwidth}{\centering
-    Image placeholder: add a screenshot of the Performance Radar tab for the high traffic scenario.}}
+    \includegraphics[width=0.85\textwidth]{images/avg-overall-delay}
+    \caption{Average delivery delay for all messages}
+    \label{fig:avg_overall_delay}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/buffer-drops}
+    \caption{Comparison of buffer drops across traffic levels}
+    \label{fig:buffer_drops}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/critical-delivery-ratio}
+    \caption{Delivery ratio specifically for high-priority critical messages}
+    \label{fig:critical_delivery_ratio}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/delivery-ratio}
+    \caption{Overall message delivery success ratio}
+    \label{fig:delivery_ratio}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/overhead-ratio}
+    \caption{Routing overhead ratio (transmissions per delivery)}
+    \label{fig:overhead_ratio}
+\end{figure}
+
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.85\textwidth]{images/performance-radar-high.png}
     \caption{Radar comparison of multi-objective routing performance}
-    \label{fig:radar_placeholder}
+    \label{fig:performance-radar-high-traffic}
 \end{figure}
 
 \begin{figure}[h!]
     \centering
-    \fbox{\parbox{0.88\textwidth}{\centering
-    Image placeholder: add a screenshot of the three-panel live simulation with Epidemic, Spray and Wait, and Spatio-Semantic views.}}
+    \includegraphics[width=0.85\textwidth]{images/demo-ss.png}
     \caption{Live three-panel simulation of competing DTN routing protocols}
     \label{fig:live_sim_placeholder}
 \end{figure}
 
+\clearpage
 \section{Testing Criteria}
 The protocol is considered successful if it satisfies the following criteria:
 

@@ -42,55 +42,7 @@ In addition to aggregate performance, the proposed protocol is interpreted in re
 \section{Dashboard and Visual Testing}
 The project includes a Streamlit dashboard for plotting metric trends, radar comparisons, raw results, and launching the live visual simulation. The live visualizer compares the three protocols side by side with the same initial seed and displays delivery, critical delivery, critical delay, overhead, drops, contacts, node roles, and critical-message carriers.
 
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.85\textwidth]{images/avg-critical-delay}
-    \caption{Average delivery delay for critical messages}
-    \label{fig:avg_critical_delay}
-\end{figure}
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.85\textwidth]{images/avg-overall-delay}
-    \caption{Average delivery delay for all messages}
-    \label{fig:avg_overall_delay}
-\end{figure}
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.85\textwidth]{images/buffer-drops}
-    \caption{Comparison of buffer drops across traffic levels}
-    \label{fig:buffer_drops}
-\end{figure}
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.85\textwidth]{images/critical-delivery-ratio}
-    \caption{Delivery ratio specifically for high-priority critical messages}
-    \label{fig:critical_delivery_ratio}
-\end{figure}
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.85\textwidth]{images/delivery-ratio}
-    \caption{Overall message delivery success ratio}
-    \label{fig:delivery_ratio}
-\end{figure}
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.85\textwidth]{images/overhead-ratio}
-    \caption{Routing overhead ratio (transmissions per delivery)}
-    \label{fig:overhead_ratio}
-\end{figure}
-
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.85\textwidth]{images/performance-radar-high.png}
-    \caption{Radar comparison of multi-objective routing performance}
-    \label{fig:performance-radar-high-traffic}
-\end{figure}
+The dashboard plots themselves are used to support interpretation of the quantitative findings, so they are discussed alongside the corresponding analysis in the results chapter rather than being grouped here as a separate gallery. In this chapter, the more relevant visual evidence is the live validation interface used during testing.
 
 \begin{figure}[h!]
     \centering
@@ -99,7 +51,8 @@ The project includes a Streamlit dashboard for plotting metric trends, radar com
     \label{fig:live_sim_placeholder}
 \end{figure}
 
-\clearpage
+The live comparison is useful because it exposes how protocol behavior emerges over time. During testing, it allows direct inspection of contact opportunities, carrier movement, congestion build-up, and the treatment of critical traffic. This makes it easier to verify that the measured metrics are consistent with the underlying routing behavior before the formal results are interpreted.
+
 \section{Testing Criteria}
 The protocol is considered successful if it satisfies the following criteria:
 

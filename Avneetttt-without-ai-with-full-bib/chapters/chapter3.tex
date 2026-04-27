@@ -1,0 +1,104 @@
+\chapter{\MakeUppercase{Technical Specification}}
+
+\section{Requirements}
+\subsection{Functional Requirements}
+The system must simulate a disaster-response \ac{dtn} and execute multiple routing protocols under identical conditions. must develop heterogeneous nodes, send messages randomly, detect wireless connections, swap messages using the chosen protocol, terminate messages once their TTL runs out, and calculate performance measures following each experiment.
+The routing layer must implement at least three different routing schemes including Epidemic Routing, Spray and Wait, and Spatio-Semantic Routing. The proposed routing protocol must store data on encounters, visits to zones, and forwarding of messages based on roles. It must allocate buffer space for important messages and provide eviction capability for non-important messages by important messages.
+
+\subsection{Non-Functional Requirements}
+The simulation needs to be reproducible, easily modifiable, and sufficiently fast so that the experiments can be carried out repeatedly. The simulation will store all results in CSV files, which will allow for both the creation of the dashboard and the thesis tables based on the same data set. The routing protocol used must be easily adaptable to other routing protocols.
+\section{Design Constraints and Assumptions}
+There are many factors that influence the development process of the simulator. First, this software was created to support research work on thesis writing, not to be used commercially, which means that the code should be readable and comprehensible. This explains why the simulator implements simple data structures and a single thread loop rather than fast event engines. This approach makes the performance of the protocols more comprehensible and comparable.
+Also, the research considersrouting protocols to be tested under
+The study also assumes that routing protocols should be evaluated under identical external conditions. The number of nodes, communication distance, area size, traffic generation,
+and TTL should thus be kept constant among different protocols in each experiment.
+This is crucial since it guarantees that any variance observed in the outcomes is due to
+the routing protocol used rather than any other change in the environment.
+A further assumption made in our analysis is that role-based routing is light-weight
+enough to be implemented in a simple simulator. It requires neither knowledge of an
+accurate map nor an expensive positioning setup or complicated machine learning Instead, it uses information that is plausible for a field node to maintain: its own encounters, zone visits, the observed role of peers, and a small amount of transitive evidence.
+
+\section{Feasibility Study}
+The project is technically feasible because all components can be implemented using standard Python data structures and deterministic simulation steps. Contact detection uses Euclidean distance. Mobility uses a random waypoint model. Message buffers are represented as lists. Routing protocols are implemented as classes with a common exchange interface.
+
+The simulation approach is also academically feasible because \ac{dtn} protocols are commonly evaluated through simulation due to the cost and variability of field deployments. Tools such as the ONE simulator demonstrate the established practice of simulation-based \ac{dtn} protocol evaluation \citep{keranen2009one}. Disaster-oriented studies have likewise relied on simulation to compare routing behavior under emergency mobility and disruption conditions \citep{martincampillo2013disaster,rosasolivos2020csar}. This project uses a custom simulator so that node roles, critical-message logic, and protocol internals can be controlled directly.
+
+\section{System Specification}
+The major simulation parameters are shown in Table \ref{tab:sim_parameters}. These parameters intentionally create a stressed environment: a large area, short contact range, finite buffer, high critical-message proportion, and multiple traffic levels.
+
+\begin{table}[h!]
+	\centering
+	\caption{Simulation parameters}
+	\renewcommand{\arraystretch}{1.3}
+	\resizebox{\textwidth}{!}{
+	\begin{tabular}{|l|l|l|}
+		\hline
+		\textbf{Parameter} & \textbf{Value} & \textbf{Purpose} \\
+		\hline
+		Simulation area & 2200 by 2200 units & Creates sparse contacts and movement diversity \\
+		\hline
+		Transmission range & 90 units & Limits contact opportunities \\
+		\hline
+		Buffer size & 30 messages per node & Forces meaningful buffer decisions \\
+		\hline
+		Simulation duration & 8000 time steps & Allows encounter and zone history to develop \\
+		\hline
+		Message \ac{ttl} & 2500 time steps & Penalizes delayed or wasted forwarding \\
+		\hline
+		Critical-message probability & 0.45 & Stresses priority handling \\
+		\hline
+		Critical copies & 16 initial copies & Allows urgent messages to spread when useful \\
+		\hline
+		Non-critical copies & 8 initial copies & Provides controlled replication for ordinary messages \\
+		\hline
+		Traffic levels & Low, Medium, High & Tests behavior from light load to congestion \\
+		\hline
+	\end{tabular}}
+	\label{tab:sim_parameters}
+\end{table}
+
+\section{Parameter Selection Rationale}
+This set of parameters is designed specifically to make the routing task challenging rather than artificially simple. Large maps and small ranges increase the likelihood of non-constant connectivity, which results in a preference for store-and-carry-forward methods and the need to consider the choice of carriers. With a smaller map and larger ranges, most schemes would perform about the same since more frequent contacts between nodes would hide their distinctions.
+Similarly, buffer sizes and reasonable TTLs are significant. In the case of an unlimited number of buffers, flooding would be punished by nothing, thus making the use of selective forwarding less obvious. As for TTL, its excessive length would make any routing decision potentially succeed after some time, thereby undermining its importance. Consequently, our parameter setting brings a balance between timely deliveries.
+Critical messages' ratio and the initial number of copies allocated to such messages are important too. High ratios of critical messages ensure that the router will have to deal with them sufficiently frequently to make its performance noticeable. Moreover, a larger initial number of copies of those messages complies with the assumption made in the thesis that urgent communication needs to have some extra forwarding opportunities under certain conditions.
+
+\section{Node and Traffic Model}
+The network contains 35 civilians, 8 responders, 3 shelters, and 5 drones. Civilians move slowly, responders move at medium speed, shelters remain static, and drones move quickly. The shelter nodes are placed in a clustered region to represent emergency coordination points. Drones are initialized as fast relays and are useful for carrying messages across partitions.
+
+Messages are generated at each time step according to the selected traffic probability. A generated message chooses a random destination other than the source. Each message has a creation time, unique identifier, hop count, critical flag, copy count, and destination. Delivered messages are counted once and then removed from all buffers.
+
+\section{Requirement-to-Metric Traceability}
+The technical requirements are connected directly to the evaluation metrics. The requirement to preserve overall communication success is measured through delivery ratio. The requirement to protect urgent traffic is measured through critical delivery ratio and average critical delay. The requirement to avoid uncontrolled replication is reflected in overhead ratio. The requirement to manage limited storage is reflected in buffer drops.
+
+The importance of traceability lies in the relationship that exists between the
+technical specifications and the discussion section. In describing the protocol as successful,
+it is not enough that one measure improves. This is illustrated by increased delivery at the
+expense of severe congestion. In this scenario, resource efficiency, which is the
+non-functional requirement, will not be satisfied. On the other hand, reduced overhead will
+not satisfy timely delivery, which is the functional requirement.
+
+\section{Scalability and Extension Considerations}
+Despite the simplicity of the simulator, the technical design is such that the system
+can be expanded easily. The design of the modular routing interface ensures that new
+routing protocols for DTNs may be used without requiring major changes in the code.
+Similarly, the node-role design can also be modified to include other specific types of
+actors without having to rewrite the entire simulation routine. Extensibility is one of the
+quality aspects required because an implementation for a thesis is supposed to allow fur-
+ther research and experimentation, not just compare two techniques.
+The scalability considered in this thesis has little to do with distributed deployment
+and much more with whether the simulation framework and routing algorithms can still manageable as the study grows in scope. By keeping the maintained state compact and by storing results in simple \ac{csv} form, the project supports repeated runs, added metrics, and additional scenarios without requiring a major redesign of the codebase.
+
+\section{Performance Metrics}
+The following metrics are used:
+
+\begin{itemize}
+	\item Delivery ratio: delivered messages divided by generated messages.
+	\item Critical delivery ratio: delivered critical messages divided by generated critical messages.
+	\item Average delay: average time between message creation and delivery.
+	\item Average critical delay: average delay for critical messages only.
+	\item Overhead ratio: transmissions divided by delivered messages.
+	\item Buffer drops: number of insertions that failed or had to be forced out due to buffer pressure.
+\end{itemize}
+
+
+These metrics indicate different characteristics of the protocol. Delivery ratio indicates reachability; critical delivery ratio indicates emergency performance; delay indicates timelyness over head ratio indicates the cost of resources; buffer drops indicate congestion pressure.

@@ -1,0 +1,51 @@
+\chapter{\MakeUppercase{Conclusion and Further Enhancements}}
+\section{Conclusion}
+In this thesis, a Spatio-Semantic routing protocol for DTNs in response to disasters is proposed. This protocol is formulated to deal with the constraints present in both Epidemic routing and Spray-and-Wait routing protocols. Epidemic routing provides high levels of data replication but is constrained by high overhead and high buffer pressure. On the other hand, the Spray-and-Wait protocol addresses overhead constraints but introduces latency in the delivery of critical messages due to inactive carrier selection.
+The new protocol consists of Encounter history, Spatial zone visitation, Proximity, Semantic nodes' function, Transitive delivery predictability, Hybrid spraying and utility forwarding, and Buffering critical messages. The new protocols allow more context-aware decision-making in forwarding data packets. The simulation shows that Spatio-Semantic routing attains delivery rate of 0.734 against Epidemic routing with rate of 0.366 and Spray and Wait with 0.682 under heavy traffic. It improves critical delivery ratio by 166.2 percent over Epidemic routing and reduces critical delay by 38.5 percent over Epidemic routing and 18.4 percent over Spray and Wait.
+
+The protocol's main cost is overhead compared with Spray and Wait. This trade-off is acceptable for the target disaster scenario because the added transmissions are used to improve delivery timeliness and critical-message performance. The results show that the proposed protocol is most useful when the network is congested and message priority matters.
+
+\section{Summary of Findings}
+The results of this thesis work can thus be stated in three propositions. First, routing decisions based on spatial information and semantics contribute to higher robustness under pressure from high levels of traffic. Second, the use of message priority in both routing and buffering operations leads to more appropriate handling of critical messages in comparison with a priority-agnostic approach. Third, a combination of two approaches can prevent the major flaw of both approaches by avoiding uncontrollable congestion associated with flooding but being still more adaptable than waiting.
+
+These findings are relevant insofar as they are consistent with the application environment for which they were developed. In a disaster relief network, the most efficient routing strategy is neither the least costly nor the maximally unconstrainedly connected one. It is the most adequate to the application environment of fragmentation, mobility, and congestion. Indeed, the protocol works best in an environment of this type.
+
+\section{Practical Implications}
+The practical implications of the proposed thesis are that disaster-response networks can benefit significantly from the identification of what each node may signify in reality. Although a drone, mobile responder, and stationary refuge point may be able to use the same wireless protocol, the difference in their identity means that they cannot substitute each other as transporters.
+
+Moreover, the thesis illustrates that it makes more sense for priority handling to become a routing system feature, rather than only an application layer designation. Even if messages are tagged as being critical and their urgency is established, if the router continues to allocate memory and duplicate as usual, there is little use in this tagging. Critical Reserve and Priority Forwarding that are utilized in this thesis provide a concrete example of how to convert message criticality into action.
+
+Another potential implication is that effective enhancement does not necessarily need the unrealistic knowledge about the world at large. In particular, the design works with local measurements, limited history, and minimal semantic structure. As such, the approach looks much more realistic for distributed implementation compared to a model that presupposes central management or flawless prediction of the future. In particular, even within an artificial simulation, this consideration seems relevant due to its compatibility with opportunistic communications.
+
+\section{Further Enhancements}
+Future improvements to the project can be made as follows:
+
+\begin{itemize}
+    \item Replace random way-point model with map-based mobility and actual disaster trace paths.
+    \item Incorporate energy models and radio interference.
+    \item Automatically tune utility weight factors using optimization or machine learning techniques.
+    \item Incorporate ACK-based cleanup of redundant copies after delivery of message.
+    \item Expand semantic roles to include hospitals, control centers, ambulances, supply trucks, and temporary relay stations.
+    \item Test the protocol performance with other DTN protocols like Prophet, MaxProp, and Bubble Rap.
+    \item Construct a small real-device implementation using smartphones or embedded computing devices.
+\end{itemize}
+
+These improvements can be grouped into three general areas. One area includes realism, such as increased realism for mobility modeling, better radio models, and field experiments. A second area involves making improvements to the algorithms involved, including dynamic weighting of utilities, cleanup based on acknowledgments, and more semantic capabilities of roles. A third area concerns performing comparative analysis on other types of \ac{dtn} protocols.
+
+\section*{Contributions}
+\addcontentsline{toc}{section}{Contributions}
+The main contributions of this dissertation include the following:
+
+\begin{itemize}
+	\item Disaster relief \ac{dtn} routing that integrates spatial and semantic aspects.
+	\item Composite utility function based on proximity, encounter history, zone memory, role relevance, and transitive contact.
+	\item Forwarding mechanism that prioritizes critical messages, along with buffer reservation.
+	\item Python-based simulation that compares Epidemic, Spray and Wait, and Spatio-Semantic routing approaches.
+	\item Experiments proving enhanced performance under heavy traffic and critical delay conditions.
+\end{itemize}
+
+\section*{Final Remarks}
+\addcontentsline{toc}{section}{Final Remarks}
+As shown by the thesis, it is possible to achieve significant success without needing a sophisticated routing framework. Through the use of spatial interpretability, knowledge of semantic roles, and crucial traffic handling, the suggested router can influence behavior in ways that are most important for disaster response. Consequently, this thesis is an effective starting point for subsequent theoretical and experimental research.
+
+On a wider scale, the research supports the notion that network design must take into consideration application demands. In a disaster scenario, effective communication cannot simply be judged by the amount of messages received successfully at the end. Instead, the preservation and delivery of urgent data in time for it to matter also counts. The Spatio-Semantic solution proposed in this paper can be considered one such step towards achieving this goal.

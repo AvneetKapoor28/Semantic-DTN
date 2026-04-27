@@ -1,0 +1,118 @@
+\chapter{\MakeUppercase{Project Description and Goals}}
+\section{Literature Review}
+Delayed Disruption-Tolerant Networking (DDTN) is a technique developed for facilitating communications in scenarios characterized by high delays, sustained disconnects, asymmetric networks, and intermittency rather than being exceptions (Cerf et al., 2007). This involves the use of persistent data stores and message-driven forwarding of information.
+
+Epidemic routing is one of the earliest and clearest \ac{dtn} routing strategies. It replicates messages through pairwise contacts so that every node that lacks a message can receive a copy \citep{vahdat2000epidemic}. its actions can mimic optimum delivery in sparse environments, yet it comes at a high cost
+because it utilizes transmission opportunities and buffer space rapidly. Thus, it serves as an effective
+pressure benchmark: if the network encounters congestion, Epidemic routing highlights the nature of
+flooding under scarcity of resources.
+Spray and Wait was designed to curb the overhead costs associated with flooding by restricting the
+number of replicas (Spyropoulos et al., 2005). In the spray stage, a restricted number of replicas is
+broadcasted. The carriers then enter the waiting phase, where they wait until they meet the destination.
+The technique optimizes the use of resources; however, it may prove inefficient or unreliable if replicas
+are assigned to nodes with fewer contact possibilities.
+
+Prediction-based routing realizes that mobility of nodes is not always stochastic.
+PRoPHET utilizes encounter histories and transitivity to determine predictability of
+delivery \citep{lindgren2012prophet}. Nodes that regularly meet destinations or nodes
+that regularly meet destinations themselves act as more reliable carriers. MaxProp
+also exploits scheduling and prioritization concepts for disruption tolerant vehicular
+networks \citep{burgess2006maxprop}. Social forwarding techniques like Bubble Rap rely on
+social centrality and community structures to choose relay nodes in pocket-switched
+networks \citep{hui2008bubble}. Results from geographic DTN routing demonstrate the usefulness
+of geographical and mobility features when direct routes are unavailable \citep{wang2016geographic}.
+
+Utility-oriented routing broadens this design space further. RAPID treats forwarding as a resource-allocation problem and explicitly tries to optimize metrics such as delay and deadline satisfaction instead of only increasing delivery probability \citep{balasubramanian2007rapid}. The SimBet approach takes yet another path by applying social similarity and egocentric betweenness for identifying bridge nodes in disconnected mobile networks \citep{daly2007simbet}. Such works are critical in that they demonstrate the possibility of estimating relay quality based on a more detailed context than simple flooding or copying restrictions.
+The project builds on this body of work by combining four categories of information in one practical routing decision: direct encounter history, spatial zone history, node role semantics, and message priority. The comparison is intentionally made against Epidemic and Spray and Wait because they represent two common extremes: unlimited replication and simple copy-limited forwarding.
+
+\section{Research Gap}
+Existing baseline protocols do not sufficiently address disaster-response priorities. Epidemic routing does not distinguish between critical and non-critical messages, so urgent traffic can be pushed into the same buffer competition as ordinary traffic. Spray and Wait limits overhead but does not ask whether a receiver is a semantically useful relay, whether it moves through important zones, or whether it is better placed for a critical message.
+
+Prediction-based and social protocols address parts of the problem, but many of them focus on human contact patterns or general delivery probability. A disaster setting also contains operational roles. A drone is not just another mobile node; it has faster movement and can bridge partitions. A shelter is not just a static node; it is likely to be a destination or coordination point. A responder is not only a relay; it is operationally meaningful for urgent messages. The research gap addressed here is the absence of a simple routing protocol that combines spatial evidence, semantic role evidence, and priority-aware buffer management for disaster \acp{dtn}.
+
+Prior disaster-focused evaluations also reinforce this gap. Comparative studies of opportunistic routing in emergency scenarios show that protocol behavior depends strongly on mobility and workload characteristics, so baseline performance in generic traces is not enough to justify a routing design for disaster response \citep{martincampillo2013disaster}. More recent context-aware disaster routing work adapts forwarding to environmental conditions and device state, confirming that scenario-specific context can materially improve decisions in disrupted emergency networks \citep{rosasolivos2020csar}. The proposed thesis follows this line of reasoning but keeps the decision model compact and interpretable by combining spatial, semantic, and criticality-aware signals directly in the forwarding logic.
+
+\section{Design Perspective for the Proposed Study}
+The design perspective of this project is that disaster routing should combine multiple weak signals rather than depend on a single strong assumption. Pure flooding assumes that more copies are always beneficial until resources collapse. Pure copy-limited routing assumes that strict control of replicas is the dominant requirement. History-based prediction assumes that future usefulness can be inferred mainly from repeated contacts. Each of them holds some truth, but all of them together represent the nature of a
+disaster-response communication network more accurately.
+Thus, routing is a multi-faceted decision in the case of disaster networks. Good
+relay candidates do not need to have one particular characteristic, but can be efficient due
+to various reasons – for instance, because they are physically closer to the destination
+node, because they tend to visit the destination node’s area more often, or even due to
+the fact that they usually meet the destination or other nodes associated with it, or
+simply due to their functions that make them likely bridges between separated network
+sections. In other words, the goal of this research is not to replicate existing DTN routers,
+but to illustrate how combining different context can help to create better routing de-
+cisions in real life situations.
+Priority issues play an important role in the described approach. Most routing re-
+search papers use messages as simple units of traffic that should be treated equally.
+Such an approach greatly simplifies analysis, but completely misses a crucial aspect of
+routing – namely, what types of packets should receive the highest protection in the
+case of congestion?
+
+\section{Objectives}
+The objectives of this project are:
+
+\begin{itemize}
+	\item To design a routing protocol that uses encounter history, spatial zones, semantic node roles, and message criticality.
+	\item To implement the proposed protocol in a reproducible Python simulator.
+	\item To compare the protocol with Epidemic routing and Spray and Wait routing under low, medium, and high traffic levels.
+	\item To evaluate the protocols using delivery ratio, critical delivery ratio, average delay, average critical delay, overhead ratio, and buffer drops.
+	\item To show that the proposed protocol provides better critical-message behavior under congested disaster-network conditions.
+\end{itemize}
+
+\section{Research Questions and Expected Outcome}
+The work is guided by three practical research questions. First, can a routing strategy that combines spatial and semantic context preserve or improve delivery when compared with basic baselines? Second, does priority-aware forwarding meaningfully improve the treatment of critical traffic under medium and high load? Third, can the protocol avoid the collapse behavior of flooding while still being more adaptive than simple copy-limited waiting? These objectives make the general research objective
+into a testable comparison.
+The expected result is not that the proposed protocol will perform better than all other
+techniques in all scenarios. The spray-and-wait protocol should continue being superior
+in terms of overhead, particularly in cases of low network loads. The epidemic routing
+protocol may still prove to be effective in cases of low network congestion because,
+when there are enough network resources available, excessive replication is helpful.
+The key expectation, however, is much more limited and realistic – that, in cases of
+high congestion, which is relevant in disaster management communications, the pro-
+posed router would perform better on balance.
+\section{Significance of the Study}
+
+Importance may be found in the application and in the methodology.
+From an application standpoint, it is expected that routing decisions in disaster net-
+works will affect rescue coordination, safety considerations, and resource allocation. A
+routing strategy which provides better support for urgent messages has the potential
+to be significant beyond an increase in simulation statistics; the research is inspired
+by the hypothesis that network behavior must be driven by operation objectives
+rather than treating all messages as equivalent.
+From a methodology standpoint, importance may be found in demonstrating that
+multiple node roles may be introduced without complicating the model to such an ex-
+tent that it is difficult to follow. Many protocols involve a number of criteria that lead
+to complex behaviors and are hard to understand due to the many elements involved.
+In contrast, the suggested approach ensures that every step of message forwarding
+is clearly defined: proximity, encounters, zones, node roles and message criticality con-
+tribute separately to the forwarding process.
+
+\section{Problem Statement}
+In the case of a mobile disaster response network which features limited buffer sizes,
+random encounters, nodes with different functionalities, and transmission of critical and non-critical messages, the issue is to identify how to choose which messages need to be transmitted such that critical transmission as well as total transmission probabilities are maximized without leading to blind flooding congestion.
+
+\section{Project Plan}
+The project was carried out in five phases. First, the simulator was defined with node roles, mobility, contact detection, message generation, \ac{ttl}, and metrics. Second, Epidemic and Spray and Wait baselines were implemented. Third, the Spatio-Semantic router was designed using a composite utility function and priority-aware buffer policy. Fourth, experiments were executed across three traffic levels for all protocols. Fifth, the output \ac{csv} files and dashboard visualization were used to compare the protocols and interpret the trade-offs.
+
+The plan was intentionally structured so that each later phase depended on artifacts from the previous phase. The simulator had to be stable before routing comparisons were meaningful. The baselines had to be implemented first so that the proposed protocol would be evaluated against known reference behaviors rather than against informal expectations. The data-export and dashboard components were also included as part of the plan instead of being treated as optional presentation features, because reproducible comparison is central to the credibility of the thesis.
+
+\begin{table}[h!]
+	\centering
+	\caption{Protocol comparison focus}
+	\renewcommand{\arraystretch}{1.3}
+	\resizebox{\textwidth}{!}{
+	\begin{tabular}{|l|l|l|l|}
+		\hline
+		\textbf{Protocol} & \textbf{Forwarding Principle} & \textbf{Strength} & \textbf{Weakness Addressed by Proposed Work} \\
+		\hline
+		Epidemic & Flood to every new contact & High reachability in light load & Excess transmissions and buffer pressure \\
+		\hline
+		Spray and Wait & Limit copies, then wait for destination & Low overhead & Weak relay selection and higher delay \\
+		\hline
+		Spatio-Semantic & Forward by spatial, semantic, and encounter utility & Priority-aware delivery under stress & Higher overhead than simple copy-limited routing \\
+		\hline
+	\end{tabular}}
+	\label{tab:protocol_focus}
+\end{table}
